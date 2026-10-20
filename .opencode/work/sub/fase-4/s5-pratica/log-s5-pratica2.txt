@@ -3671,3 +3671,489 @@ RUN  v5.0.3 /dev-server
 [0m$ [0mcd /dev-server && bunx tsgo --noEmit 2>&1 | tail -20
 (no output)
 [0m
+[0m← [0mWrite src/components/practice/spec-format.ts
+Wrote file successfully.
+[0m
+Now the practice shell components. First the display formatting helpers:
+[0m← [0mWrite src/components/practice/use-practice-settings.ts
+Wrote file successfully.
+[0m
+[0m← [0mWrite src/components/practice/task-header.tsx
+Wrote file successfully.
+[0m
+[0m← [0mEdit src/components/practice/task-header.tsx
+Index: /dev-server/src/components/practice/task-header.tsx
+===================================================================
+--- /dev-server/src/components/practice/task-header.tsx
++++ /dev-server/src/components/practice/task-header.tsx
+@@ -68,9 +68,9 @@
+ </div>
+ 
+ <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+   <Badge variant="outline" className="border-border/70 text-muted-foreground">
+-    {formatTaskCount(spec.scoredTasksInExam)} na prova
++    {formatTaskCount(spec.scoredTasksInExam)} tarefas na prova
+   </Badge>
+   {hasContent ? (
+     <Badge variant="outline" className="border-border/70 text-muted-foreground">
+       {numberFormatter.format(entry.count)} no banco
+
+[0m
+[0m← [0mWrite src/components/practice/task-spec-card.tsx
+Wrote file successfully.
+[0m
+[0m← [0mEdit src/components/practice/task-spec-card.tsx
+Index: /dev-server/src/components/practice/task-spec-card.tsx
+===================================================================
+--- /dev-server/src/components/practice/task-spec-card.tsx
++++ /dev-server/src/components/practice/task-spec-card.tsx
+@@ -10,8 +10,9 @@
+  * leem o `ExamTaskSpec`. A data de consulta das fontes também vem de `EXAM_SOURCES`.
+  */
+ 
+ import { CalendarCheck, FileText, Info, Lock, TriangleAlert } from "lucide-react";
++import type { ReactNode } from "react";
+ 
+ import { EXAM_META, type ExamTaskSpec } from "@/data/exam-spec";
+ import type { CatalogEntry } from "@/lib/app/catalogo";
+ import { Badge } from "@/components/ui/badge";
+
+[0m
+[0m← [0mEdit src/components/practice/task-spec-card.tsx
+Index: /dev-server/src/components/practice/task-spec-card.tsx
+===================================================================
+--- /dev-server/src/components/practice/task-spec-card.tsx
++++ /dev-server/src/components/practice/task-spec-card.tsx
+@@ -139,9 +139,9 @@
+     </section>
+   );
+ }
+ 
+-function Fact({ label, children }: { label: string; children: React.ReactNode }) {
++function Fact({ label, children }: { label: string; children: ReactNode }) {
+   return (
+     <div className="min-w-0">
+       <dt className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{label}</dt>
+       <dd className="mt-0.5 text-sm leading-relaxed text-foreground">{children}</dd>
+
+[0m
+[0m← [0mWrite src/components/practice/timer-bar.tsx
+Wrote file successfully.
+[0m
+## Objective
+- Start at F4.4.1 of `roadmap-proj1-s5` and implement the practice delivery through the end: `src/lib/app/practice-timer.ts`, `src/routes/praticar/$type.tsx`, `src/components/practice/`, tests for the timer; then record `report-s5-pratica.md` in `.opencode/work/sub/fase-4/s5-pratica/`.
+- The practice engine itself is deferred; this wave is the honest shell (ficha do tipo, timer de treino, slot estruturado para o motor da Fase 6).
+
+## Important Details
+- Workspace: `/dev-server`. Baseline: 317 testes verdes, `bunx tsgo --noEmit` limpo.
+- Vite dev server is running (`node /dev-server/node_modules/.bin/vite dev --port 8080`, HTTP 200); its TanStack router plugin regenerates `src/routeTree.gen.ts` when a new route file is created. Never edit `routeTree.gen.ts` by hand.
+- `/praticar/$type` is not yet in the route tree; `/ajustes` route does not exist yet (s4 concurrent) — use `useResolvedPath("/ajustes")` and only render a link when resolved.
+- Existing contracts to consume:
+  - `src/data/exam-spec.ts`: `EXAM_TASKS` (22 types), `EXAM_TASK_ORDER`, `EXAM_META` (humanReviewedTypes), `EXAM_SOURCES` with `consultedAt`, `ExamTaskSpec` (`preparationSeconds?`, `responseSeconds: number | "until_audio" | "shared_section"`, `contentLimit`, `scoredSkills`, `weightsApproximation`, `notes`).
+  - `src/domain/question.ts`: `TASK_TYPES`, `TaskType`, `SECTION_BY_TYPE`.
+  - `src/lib/app/settings.ts`: `AppSettings`, `DEFAULT_SETTINGS.practice = { timersEnabled: true, timerScale: 1 }`, `TIMER_SCALES = [1, 1.5, 2]`, `readAppSettings`, `SettingsStore`.
+  - `src/lib/app/catalogo.ts`: `deriveCatalog`, `groupCatalog`, `summarizeCatalog`, `SECTION_LABELS`, `TASK_DISPLAY_NAMES`, `practiceHref`, `isComingSoon`, `SPARSE_COUNT_THRESHOLD`, `CatalogEntry`/`CatalogStatus`.
+  - `src/lib/app/progress-client.ts`: `getProgressLayer`, `isProgressAvailable` (browser-only; call inside `useEffect`).
+  - `src/components/layout/use-resolved-path.ts`: `useResolvedPath`, `resolveRegisteredPath`.
+- Timer format facts from `EXAM_TASKS`: `describe_image` 25 s prep / 40 s response; `repeat_sentence` no prep / 15 s; `read_aloud` 30 s prep / `until_audio`; `wfd`, `read_fib_dropdown`, reading/listening MCQs = `shared_section` with no prep; `swt` 600 s; `write_essay` 1200 s.
+- Decisions made:
+  - `TimerSpec` keeps the PRD's three required fields (`preparationMs`, `responseMs`, `adjustable`) and adds documented `responseKind`, `enabled`, `scale` for honest UI labeling.
+  - `adjustable = settings.timersEnabled && (preparationMs !== null || responseMs !== null)`; `timersEnabled: false` keeps displayed times but disables countdown; `shared_section`/`until_audio` produce `responseMs: null`, never a fake `0 s`.
+  - `timerForType` throws if `spec.id !== type`; `examTaskSpecFor(raw string)` returns `null` for invalid params (for `head()`).
+  - Pure state machine in lib: `initialTimerState`, `startTimer`, `pauseTimer`, `resetTimer(spec)`, `tickTimer(state, spec, deltaMs)`, `timerProgress`, `startsIn`.
+  - Route plan: `createFileRoute("/praticar/$type")`; `beforeLoad` throws `notFound()` for invalid type/missing spec; manifest `queryOptions` + `useSuspenseQuery` like catalogo; find entry via `deriveCatalog(manifest)`; dynamic `head()` title `Praticar <namePt> — PTE Master Hub` + og/twitter metas; component composes header, timer bar, engine slot, ficha.
+  - Planned components: `task-header.tsx`, `task-spec-card.tsx`, `use-practice-settings.ts` (loads settings via `getProgressLayer`/`readAppSettings`, status loading/ready/unavailable/error, defaults while loading), `timer-bar.tsx` (interval 250 ms with real elapsed delta, pause/resume/reset, `aria-live` announcements, progress bar via `bg-primary` + inline width, static honest text when disabled/unavailable), `engine-slot.tsx` exporting `PracticeEngineSlot` (dashed border, no fake interaction, says motor chega na Fase 6, warning when count === 0, `data-practice-engine={type}`, link to `/catalogo`), `index.ts` barrel.
+  - UI avoids hardcoded colors; uses `Badge`, `Skeleton`, `Link`, `cn`, lucide icons; mobile-first, touch targets ≥ 44 px.
+- Tests must not hardcode bank counts; use real exam-spec times and synthetic settings.
+
+## Work State
+### Completed
+- `src/lib/app/practice-timer.ts` written (timer conversion + state machine + `formatDuration`/`formatCountdown`/`hasCountdown`/`findExamTaskSpec`/`examTaskSpecFor`).
+- `src/test/app/practice-timer.test.ts` written: 46 tests, all passing (`bunx vitest run src/test/app/practice-timer.test.ts` → 46 passed).
+- `bunx tsgo --noEmit` ran clean after the lib + test.
+- `src/components/practice/spec-format.ts` written: `sectionLabel`, `formatTaskCount`, `formatPreparation`, `formatResponseWindow`, `explainResponseWindow`, `formatScoredSkills`, `formatScoredSkillsDetailed`, `formatSourcesDate`.
+
+### Active
+- Building the `src/components/practice/` component set; only `spec-format.ts` exists so far (not yet typechecked).
+- Remaining planned files: `task-header.tsx`, `task-spec-card.tsx`, `use-practice-settings.ts`, `timer-bar.tsx`, `engine-slot.tsx` (`PracticeEngineSlot`), `index.ts`.
+
+### Blocked
+- (none)
+
+## Next Move
+1. Write the remaining practice components (`task-header.tsx`, `task-spec-card.tsx`, `use-practice-settings.ts`, `timer-bar.tsx`, `engine-slot.tsx`, `index.ts`), then create `src/routes/praticar/$type.tsx` and confirm `src/routeTree.gen.ts` regenerated via the running dev server.
+2. Run `cd /dev-server && bunx vitest run` and `bunx tsgo --noEmit`, fix failures, then write `.opencode/work/sub/fase-4/s5-pratica/report-s5-pratica.md` with real evidence (test counts, gates, decisions).
+
+## Relevant Files
+- `/dev-server/src/lib/app/practice-timer.ts`: pure timer conversion/state machine (F4.4.1, done, tested).
+- `/dev-server/src/test/app/practice-timer.test.ts`: 46 passing tests covering formats, scale, disabled timers, state machine, formatting.
+- `/dev-server/src/components/practice/spec-format.ts`: display formatting for the ficha (just written).
+- `/dev-server/src/routes/praticar/$type.tsx`: route still to create; triggers routeTree regeneration.
+- `/dev-server/src/routes/catalogo.tsx`: reference for manifest query, `PracticeLink`/`useResolvedPath`, pending state and styling.
+- `/dev-server/src/lib/app/catalogo.ts`: catalog derivation and `SECTION_LABELS`/`TASK_DISPLAY_NAMES` consumed by the practice shell.
+- `/dev-server/src/data/exam-spec.ts`: official task specs and sources used for all times/content facts.
+- `/dev-server/src/lib/app/settings.ts`: `AppSettings["practice"]` contract (`timersEnabled`, `timerScale`).
+- `/dev-server/src/lib/app/progress-client.ts`: `getProgressLayer`/`isProgressAvailable` for reading settings client-side.
+- `/dev-server/src/components/layout/use-resolved-path.ts`: conditional link resolution for `/ajustes`.
+- `/dev-server/src/routes/index.tsx`: reference for the settings-loading `useEffect` pattern and honesty copy.
+- `/dev-server/src/test/app/catalogo.test.ts`: reference test style (SSR render, synthetic manifest, contract checks).
+- `/dev-server/.opencode/work/sub/fase-4/s5-pratica/`: destination of `report-s5-pratica.md` (not yet written).
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+[0m← [0mWrite src/components/practice/engine-slot.tsx
+Wrote file successfully.
+[0m
+[0m← [0mWrite src/components/practice/index.ts
+Wrote file successfully.
+[0m
+[0m→ [0mRead src/routes/catalogo.tsx
+[0m→ [0mRead src/routes/__root.tsx
+[0m
+[0m$ [0mls src/routes && ls src/routes/praticar 2>/dev/null; echo "---"; ls src/components/practice
+catalogo.tsx
+diagnostico.tsx
+index.tsx
+progresso.tsx
+README.md
+__root.tsx
+sessoes
+simulado.tsx
+---
+engine-slot.tsx
+index.ts
+spec-format.ts
+task-header.tsx
+task-spec-card.tsx
+timer-bar.tsx
+use-practice-settings.ts
+[0m
+[0m$ [0mgrep -n "^export" src/lib/app/practice-timer.ts
+39:export type TimerResponseKind = "fixed" | "until_audio" | "shared_section" | "none";
+49:export interface TimerSpec {
+65:export type TimerPhase = "idle" | "preparation" | "response" | "finished" | "unavailable";
+67:export interface TimerState {
+86:export function findExamTaskSpec(type: TaskType): ExamTaskSpec {
+98:export function examTaskSpecFor(rawType: string): ExamTaskSpec | null {
+123:export function timerForType(
+154:export function hasCountdown(spec: TimerSpec): boolean {
+166:export function formatDuration(ms: number): string {
+177:export function formatCountdown(ms: number): string {
+183:export function startsIn(spec: TimerSpec): "preparation" | "response" | null {
+198:export function initialTimerState(spec: TimerSpec): TimerState {
+209:export function startTimer(state: TimerState, spec: TimerSpec): TimerState {
+225:export function pauseTimer(state: TimerState): TimerState {
+230:export function resetTimer(spec: TimerSpec): TimerState {
+242:export function tickTimer(state: TimerState, spec: TimerSpec, deltaMs: number): TimerState {
+256:export function timerProgress(state: TimerState, spec: TimerSpec): number {
+[0m
+[0m→ [0mRead src/lib/app/practice-timer.ts[90m [offset=20, limit=120][0m
+[0m
+[0m$ [0mmkdir -p src/routes/praticar
+(no output)
+[0m
+[0m← [0mWrite src/routes/praticar/$type.tsx
+Wrote file successfully.
+[0m
+[0m← [0mEdit src/routes/praticar/$type.tsx
+Index: /dev-server/src/routes/praticar/$type.tsx
+===================================================================
+--- /dev-server/src/routes/praticar/$type.tsx
++++ /dev-server/src/routes/praticar/$type.tsx
+@@ -29,11 +29,10 @@
+   usePracticeSettings,
+ } from "@/components/practice";
+ import { Skeleton } from "@/components/ui/skeleton";
+ import { loadManifest } from "@/data/loader";
+-import { deriveCatalog } from "@/lib/app/catalogo";
++import { SECTION_LABELS, deriveCatalog } from "@/lib/app/catalogo";
+ import { examTaskSpecFor, timerForType } from "@/lib/app/practice-timer";
+-import { SECTION_LABELS } from "@/lib/app/catalogo";
+ 
+ const manifestQuery = queryOptions({
+   queryKey: ["bank", "manifest"],
+   queryFn: () => loadManifest(),
+
+[0m
+[0m$ [0mgrep -n "SECTION_LABELS" -A 12 src/lib/app/catalogo.ts | head -40; echo "---"; sleep 3; grep -n "praticar" src/routeTree.gen.ts | head
+123:export const SECTION_LABELS: Readonly<
+124-  Record<Section, { label: string; labelPt: string; description: string }>
+125-> = Object.freeze({
+126-  speaking: {
+127-    label: "Speaking",
+128-    labelPt: "Fala",
+129-    description:
+130-      "Tarefas faladas: você responde em voz alta, com preparação e tempo de resposta próprios de cada tipo.",
+131-  },
+132-  writing: {
+133-    label: "Writing",
+134-    labelPt: "Escrita",
+135-    description: "Tarefas escritas com limite de palavras e de tempo, avaliadas por critérios por tipo.",
+--
+234:    const labels = SECTION_LABELS[section];
+235-    return {
+236-      section,
+237-      label: labels.label,
+238-      labelPt: labels.labelPt,
+239-      description: labels.description,
+240-      entries: sectionEntries,
+241-      types: sectionEntries.length,
+242-      questions: sectionEntries.reduce((sum, entry) => sum + entry.count, 0),
+243-      words: sectionEntries.reduce((sum, entry) => sum + entry.words, 0),
+244-      sparseTypes: sectionEntries.filter((entry) => entry.status === "sparse").length,
+245-    };
+246-  });
+---
+[0m
+[0m$ [0mgrep -n "catalogo\|__root__" src/routeTree.gen.ts | head; echo "---"; ls -l --time-style=+%H:%M:%S src/routeTree.gen.ts src/routes/praticar/\$type.tsx; date +%H:%M:%S; echo "---"; ps aux | grep -c "[v]ite"
+13:import { Route as CatalogoRouteImport } from './routes/catalogo'
+26:  id: '/catalogo',
+27:  path: '/catalogo',
+58:  '/catalogo': typeof CatalogoRoute
+67:  '/catalogo': typeof CatalogoRoute
+75:  __root__: typeof rootRouteImport
+77:  '/catalogo': typeof CatalogoRoute
+88:    | '/catalogo'
+97:    | '/catalogo'
+104:    | '__root__'
+---
+-rw-r--r-- 1 root root 5136 20:46:26 src/routes/praticar/$type.tsx
+-rw-r--r-- 1 root root 5785 20:39:18 src/routeTree.gen.ts
+20:46:34
+---
+2
+[0m
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/catalogo; sleep 4; grep -n "praticar" src/routeTree.gen.ts | head
+200
+[0m
+[0m$ [0mcat package.json; echo "---"; cat vite.config.ts
+{
+  "name": "tanstack_start_ts",
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "build:dev": "vite build --mode development",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "overrides": {
+    "rolldown": "1.2.1"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@radix-ui/react-accordion": "^1.2.12",
+    "@radix-ui/react-alert-dialog": "^1.1.15",
+    "@radix-ui/react-aspect-ratio": "^1.1.8",
+    "@radix-ui/react-avatar": "^1.1.11",
+    "@radix-ui/react-checkbox": "^1.3.3",
+    "@radix-ui/react-collapsible": "^1.1.12",
+    "@radix-ui/react-context-menu": "^2.2.16",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-hover-card": "^1.1.15",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-menubar": "^1.1.16",
+    "@radix-ui/react-navigation-menu": "^1.2.14",
+    "@radix-ui/react-popover": "^1.1.15",
+    "@radix-ui/react-progress": "^1.1.8",
+    "@radix-ui/react-radio-group": "^1.3.8",
+    "@radix-ui/react-scroll-area": "^1.2.10",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-separator": "^1.1.8",
+    "@radix-ui/react-slider": "^1.3.6",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-switch": "^1.2.6",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "@radix-ui/react-toggle": "^1.1.10",
+    "@radix-ui/react-toggle-group": "^1.1.11",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "@tailwindcss/vite": "^4.2.1",
+    "@tanstack/react-query": "^5.101.1",
+    "@tanstack/react-router": "1.170.41",
+    "@tanstack/react-start": "1.168.60",
+    "@tanstack/router-plugin": "1.168.42",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "date-fns": "^4.1.0",
+    "embla-carousel-react": "^8.6.0",
+    "input-otp": "^1.4.2",
+    "lucide-react": "^0.575.0",
+    "react": "^19.2.0",
+    "react-day-picker": "^9.14.0",
+    "react-dom": "^19.2.0",
+    "react-hook-form": "^7.71.2",
+    "react-resizable-panels": "^4.6.5",
+    "recharts": "^2.15.4",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "^4.2.1",
+    "tw-animate-css": "^1.3.4",
+    "vaul": "^1.1.2",
+    "vite-tsconfig-paths": "^6.0.2",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "@lovable.dev/vite-tanstack-config": "2.26.5",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/node": "^22.16.5",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "eslint": "^9.32.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.2.6",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "fake-indexeddb": "^6.2.6",
+    "globals": "^15.15.0",
+    "jsdom": "^30.1.1",
+    "nitro": "3.0.260603-beta",
+    "prettier": "^3.7.3",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.56.1",
+    "vite": "8.1.5",
+    "vitest": "^5.0.3"
+  }
+}
+---
+// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
+// or the app will break with duplicate plugins:
+//   - TanStack devtools (dev-only, first), tanstackStart, viteReact, tailwindcss, tsConfigPaths,
+//     nitro (build-only using cloudflare as a default target), VITE_* env injection, @ path alias,
+//     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
+// You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
+import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { opencodeProxy } from "./vite-opencode-proxy";
+
+export default defineConfig({
+  vite: {
+    // Dev-only same-origin proxy exposing the local OpenCode web UI at /oc.
+    plugins: [opencodeProxy()],
+  },
+  tanstackStart: {
+    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
+    // nitro/vite builds from this
+    server: { entry: "server" },
+  },
+});
+[0m
+[0m$ [0mps aux | grep "[v]ite" | head; echo "---"; ls /tmp/dev-server-logs/ 2>/dev/null; tail -20 /tmp/dev-server-logs/*.log 2>/dev/null | tail -30
+root         927  2.7  1.1 27734644 386752 ?     Sl   20:40   0:10 node /dev-server/node_modules/.bin/vite dev --port 8080
+root        2038 37.0  2.1 76165464 706868 ?     Rl   20:42   1:43 opencode run --agent sub-s2-home-f4 Sua execução anterior produziu a entrega que JÁ está em disco (src/routes/index.tsx, src/lib/app/plano-do-dia.ts, src/test/app/plano-do-dia.test.ts) mas morreu ANTES de gravar o relatório. Tarefa agora: (1) verifique a entrega contra os critérios de aceite do seu prd-project1-s2; (2) rode seus gates (bunx vitest run src/test/app/plano-do-dia.test.ts; bunx tsgo --noEmit) e corrija pequenas falhas se as provas mostrarem; (3) grave report-s2-home.md em .opencode/work/sub/fase-4/s2-home/ com evidências reais. Baseline atual: 317 testes verdes, tsgo limpo.
+---
+dev-server.log
+$ vite dev --port "8080"
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)
+Install skipped - install inputs unchanged and install complete marker exists
+$ vite dev --port "8080"
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+  VITE v8.1.5  ready in 695 ms
+
+  ➜  Local:   http://localhost:8080/
+  ➜  Network: http://100.64.0.1:8080/
+8:40:14 PM [vite] (ssr) connected.
+8:45:44 PM [vite] (client) hmr update /src/styles.css?direct, /src/routes/catalogo.tsx, /src/routes/index.tsx?tsr-split=component, /src/routes/index.tsx?tsr-split=component&t=1792529079
+8:45:44 PM [vite] (ssr) page reload src/data/generated/manifest.json
+8:45:44 PM [vite] (ssr) program reload
+8:45:44 PM [vite] (client) hmr update /src/styles.css?direct, /src/routes/catalogo.tsx, /src/routes/index.tsx?tsr-split=component, /src/routes/index.tsx?tsr-split=component&t=1792529079
+8:45:44 PM [vite] (ssr) page reload src/data/generated/index.json
+8:45:44 PM [vite] (client) hmr update /src/styles.css?direct, /src/routes/index.tsx?tsr-split=component, /src/routes/index.tsx?tsr-split=component&t=1792529079
+8:45:44 PM [vite] (ssr) page reload src/lib/app/plano-do-dia.ts
+8:45:44 PM [vite] (client) hmr update /src/styles.css?direct, /src/routes/index.tsx, /src/routes/index.tsx?tsr-split=component, /src/routes/index.tsx?tsr-split=component&t=1792529079
+8:45:44 PM [vite] (ssr) page reload src/routes/index.tsx
+[0m
+[0m$ [0mgrep -n "praticar\|page reload src/routes" /tmp/dev-server-logs/dev-server.log | tail -20; echo "---"; ls -l --time-style=+%H:%M:%S src/routeTree.gen.ts; grep -c "praticar" src/routeTree.gen.ts
+62:8:45:44 PM [vite] (ssr) page reload src/routes/index.tsx
+---
+-rw-r--r-- 1 root root 5785 20:39:18 src/routeTree.gen.ts
+0
+[0m
+[0m$ [0mls node_modules/.bin | grep -i "tsr\|router\|tanstack" ; echo "---"; ls node_modules/@tanstack | head -20
+---
+devtools-bundler-core
+devtools-client
+devtools-event-bus
+devtools-event-client
+devtools-vite
+history
+query-core
+react-query
+react-router
+react-start
+react-start-client
+react-start-rsc
+react-start-server
+react-store
+router-core
+router-generator
+router-plugin
+router-utils
+start-client-core
+start-fn-stubs
+[0m
+[0m$ [0mcat node_modules/@tanstack/router-generator/package.json | head -40; ls node_modules/@tanstack/router-generator/dist | head
+{
+  "name": "@tanstack/router-generator",
+  "version": "1.167.40",
+  "description": "Modern and scalable routing for React applications",
+  "author": "Tanner Linsley",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TanStack/router.git",
+    "directory": "packages/router-generator"
+  },
+  "homepage": "https://tanstack.com/router",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/tannerlinsley"
+  },
+  "keywords": [
+    "react",
+    "location",
+    "router",
+    "routing",
+    "async",
+    "async router",
+    "typescript"
+  ],
+  "type": "module",
+  "types": "dist/esm/index.d.ts",
+  "main": "dist/cjs/index.cjs",
+  "module": "dist/esm/index.js",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.cts",
+        "default": "./dist/cjs/index.cjs"
+      }
+    },
+cjs
+esm
+[0m
+[0m$ [0mtouch 'src/routes/praticar/$type.tsx'; sleep 4; grep -c praticar src/routeTree.gen.ts; ls -l --time-style=+%H:%M:%S src/routeTree.gen.ts
+0
+-rw-r--r-- 1 root root 5785 20:39:18 src/routeTree.gen.ts
+[0m
+[0m$ [0mls -a | grep -i tsr; cat tsr.config.json 2>/dev/null; grep -rn "routesDirectory\|generatedRouteTree\|autoCodeSplitting" --include="*.ts" --include="*.json" . --exclude-dir=node_modules --exclude-dir=.git | head
+(no output)
+[0m
+[0m$ [0mcurl -s -o /tmp/prat.html -w "%{http_code}\n" "http://localhost:8080/praticar/wfd"; grep -c -i "praticar" /tmp/prat.html; sleep 3; grep -c praticar src/routeTree.gen.ts
+404
+0
+0
+[0m
+[0m$ [0mmv 'src/routes/praticar/$type.tsx' 'src/routes/praticar.$type.tsx' && rmdir src/routes/praticar && sleep 5; grep -c praticar src/routeTree.gen.ts; ls -l --time-style=+%H:%M:%S src/routeTree.gen.ts
+0
+-rw-r--r-- 1 root root 5785 20:39:18 src/routeTree.gen.ts
+[0m

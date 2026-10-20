@@ -34,6 +34,7 @@ export interface PracticeDraft {
 }
 
 export interface TtsDraft {
+  enabled: boolean;
   /** `SpeechSynthesisVoice.voiceURI`; `null` = melhor voz em inglês */
   voiceUri: string | null;
   rate: number;
@@ -100,6 +101,7 @@ export function buildSettingsPatch(draft: SettingsDraft): DeepPartialAppSettings
 
   if (draft.tts !== undefined) {
     patch.tts = {
+      enabled: draft.tts.enabled,
       voiceUri: normalizeVoiceUri(draft.tts.voiceUri),
       rate: clampSpeechRate(draft.tts.rate),
     };

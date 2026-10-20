@@ -7,8 +7,9 @@
  * 3. Seção sem histórico gera "explorar" na seção menos coberta, com empate
  *    resolvido pela ordem oficial.
  * 4. Meta: data ausente convida a Ajustes; data passada pede atualização.
- * 5. Honestidade: nenhum item fala de estimativa/prontidão (Fase 8) e o teto
- *    de itens é respeitado.
+ * 5. Honestidade: nenhum item fala de estimativa/prontidão (Fase 8), o teto
+ *    de itens é respeitado e todo `href` é destino real do produto (nada de
+ *    rota inventada).
  * 6. A agregação por seção usa os snapshots (fonte independente do log) e
  *    resiste a valores corrompidos.
  */
@@ -18,6 +19,7 @@ import { describe, expect, it } from "vitest";
 import { emptySnapshot, type QuestionSnapshot, type TaskType } from "@/domain";
 import {
   DAY_PLAN_MAX_ITEMS,
+  SECTION_DISPLAY_NAMES,
   buildDayPlan,
   emptyPracticeBySection,
   leastPracticedSection,
@@ -256,6 +258,38 @@ describe("buildDayPlan — honestidade (regra 4)", () => {
       expect(item.title.trim().length).toBeGreaterThan(0);
       expect(item.description.trim().length).toBeGreaterThan(0);
       expect(item.href.startsWith("/")).toBe(true);
+    }
+  });
+
+  it("só aponta para destinos reais do produto", () => {
+    const allowed = new Set(["/sessoes", "/catalogo", "/ajustes"]);
+    const scenarios: DayPlanInput[] = [
+      makeInput({ dueCount: 9, settings: makeSettings({ examDate: null }) }),
+      makeInput({
+        dueCount: 0,
+        practiceBySection: { speaking: 3, writing: 3, reading: 3, listening: 3 },
+        settings: makeSettings({ examDate: "2026-10-19" }),
+      }),
+      makeInput({ dueCount: null }),
+    ];
+
+    for (const scenario of scenarios) {
+      for (const item of buildDayPlan(scenario)) {
+        expect(allowed.has(item.href)).toBe(true);
+      }
+    }
+  });
+
+  it("nomeia as quatro seções do exame", () => {
+    expect(Object.keys(SECTION_DISPLAY_NAMES).sort()).toEqual([
+      "listening",
+      "reading",
+      "speaking",
+      "writing",
+    ]);
+    for (const [section, label] of Object.entries(SECTION_DISPLAY_NAMES)) {
+      expect(label.length).toBeGreaterThan(0);
+      expect(section.length).toBeGreaterThan(0);
     }
   });
 });
