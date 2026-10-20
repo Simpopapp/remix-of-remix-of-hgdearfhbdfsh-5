@@ -1,3 +1,154 @@
 [0m
 > sub-s5-pratica-f4 · deepseek-v4.1-flash-free
 [0m
+[0m$ [0mls -la /dev-server/src && echo "---DOMAIN---" && ls -la /dev-server/src/domain && echo "---DATA---" && ls -la /dev-server/src/data && echo "---LIB---" && ls -la /dev-server/src/lib && echo "---LIB/APP---" && ls -la /dev-server/src/lib/app && echo "---ROUTES---" && ls -la /dev-server/src/routes && echo "---COMPONENTS---" && ls -la /dev-server/src/components
+total 64
+drwxr-xr-x 9 root root 4096 Oct 20 20:39 .
+drwxr-xr-x 1 root root 4096 Oct 20 20:42 ..
+drwxr-xr-x 4 root root 4096 Oct 20 20:39 components
+drwxr-xr-x 4 root root 4096 Oct 20 20:39 data
+drwxr-xr-x 2 root root 4096 Oct 20 20:39 domain
+drwxr-xr-x 2 root root 4096 Oct 20 20:39 hooks
+drwxr-xr-x 3 root root 4096 Oct 20 20:39 lib
+-rw-r--r-- 1 root root  394 Oct 20 20:39 router.tsx
+drwxr-xr-x 3 root root 4096 Oct 20 20:39 routes
+-rw-r--r-- 1 root root 5785 Oct 20 20:39 routeTree.gen.ts
+-rw-r--r-- 1 root root 2048 Oct 20 20:39 server.ts
+-rw-r--r-- 1 root root  944 Oct 20 20:39 start.ts
+-rw-r--r-- 1 root root 3215 Oct 20 20:39 styles.css
+drwxr-xr-x 5 root root 4096 Oct 20 20:39 test
+---DOMAIN---
+total 120
+drwxr-xr-x 2 root root  4096 Oct 20 20:39 .
+drwxr-xr-x 9 root root  4096 Oct 20 20:39 ..
+-rw-r--r-- 1 root root  5040 Oct 20 20:39 aggregates.ts
+-rw-r--r-- 1 root root  5525 Oct 20 20:39 attempt.ts
+-rw-r--r-- 1 root root 11442 Oct 20 20:39 backup.ts
+-rw-r--r-- 1 root root  4537 Oct 20 20:39 day.ts
+-rw-r--r-- 1 root root  4357 Oct 20 20:39 evaluation.ts
+-rw-r--r-- 1 root root  1716 Oct 20 20:39 index.ts
+-rw-r--r-- 1 root root 12920 Oct 20 20:39 question.ts
+-rw-r--r-- 1 root root 41776 Oct 20 20:39 schema.ts
+-rw-r--r-- 1 root root  4036 Oct 20 20:39 snapshot.ts
+---DATA---
+total 68
+drwxr-xr-x 4 root root  4096 Oct 20 20:39 .
+drwxr-xr-x 9 root root  4096 Oct 20 20:39 ..
+drwxr-xr-x 3 root root  4096 Oct 20 20:39 bank
+-rw-r--r-- 1 root root 29948 Oct 20 20:39 exam-spec.ts
+drwxr-xr-x 2 root root  4096 Oct 20 20:39 generated
+-rw-r--r-- 1 root root 18755 Oct 20 20:39 loader.ts
+---LIB---
+total 36
+drwxr-xr-x 3 root root 4096 Oct 20 20:39 .
+drwxr-xr-x 9 root root 4096 Oct 20 20:39 ..
+drwxr-xr-x 2 root root 4096 Oct 20 20:39 app
+-rw-r--r-- 1 root root 2898 Oct 20 20:39 error-capture.ts
+-rw-r--r-- 1 root root 1371 Oct 20 20:39 error-page.ts
+-rw-r--r-- 1 root root 1821 Oct 20 20:39 lovable-error-reporting.ts
+-rw-r--r-- 1 root root 6304 Oct 20 20:39 speech.ts
+-rw-r--r-- 1 root root  169 Oct 20 20:39 utils.ts
+---LIB/APP---
+total 152
+drwxr-xr-x 2 root root  4096 Oct 20 20:39 .
+drwxr-xr-x 3 root root  4096 Oct 20 20:39 ..
+-rw-r--r-- 1 root root 14472 Oct 20 20:39 backup-io.ts
+-rw-r--r-- 1 root root 11465 Oct 20 20:39 catalogo.ts
+-rw-r--r-- 1 root root 12826 Oct 20 20:39 db.ts
+-rw-r--r-- 1 root root  3174 Oct 20 20:39 index.ts
+-rw-r--r-- 1 root root 10183 Oct 20 20:39 media.ts
+-rw-r--r-- 1 root root  7757 Oct 20 20:39 plano-do-dia.ts
+-rw-r--r-- 1 root root  4476 Oct 20 20:39 progress-client.ts
+-rw-r--r-- 1 root root 10900 Oct 20 20:39 settings.ts
+-rw-r--r-- 1 root root  9982 Oct 20 20:39 srs.ts
+-rw-r--r-- 1 root root 41607 Oct 20 20:39 storage.ts
+---ROUTES---
+total 80
+drwxr-xr-x 3 root root  4096 Oct 20 20:39 .
+drwxr-xr-x 9 root root  4096 Oct 20 20:39 ..
+-rw-r--r-- 1 root root 13401 Oct 20 20:39 catalogo.tsx
+-rw-r--r-- 1 root root  1751 Oct 20 20:39 diagnostico.tsx
+-rw-r--r-- 1 root root 25634 Oct 20 20:39 index.tsx
+-rw-r--r-- 1 root root  1869 Oct 20 20:39 progresso.tsx
+-rw-r--r-- 1 root root   835 Oct 20 20:39 README.md
+-rw-r--r-- 1 root root  5047 Oct 20 20:39 __root.tsx
+drwxr-xr-x 2 root root  4096 Oct 20 20:39 sessoes
+-rw-r--r-- 1 root root  1701 Oct 20 20:39 simulado.tsx
+---COMPONENTS---
+total 16
+drwxr-xr-x 4 root root 4096 Oct 20 20:39 .
+drwxr-xr-x 9 root root 4096 Oct 20 20:39 ..
+drwxr-xr-x 2 root root 4096 Oct 20 20:39 layout
+drwxr-xr-x 2 root root 4096 Oct 20 20:39 ui
+[0m
+I'll start by exploring the current state of the workspace to understand the existing structures I need to consume (exam-spec, manifest loader, settings, etc.).
+[0m$ [0mls -la /dev-server/.opencode/work/sub/ 2>/dev/null && echo "---FASE4---" && ls -laR /dev-server/.opencode/work/sub/fase-4/ 2>/dev/null | head -60
+total 24
+drwxr-xr-x 6 root root 4096 Oct 20 20:39 .
+drwxr-xr-x 3 root root 4096 Oct 20 20:39 ..
+drwxr-xr-x 4 root root 4096 Oct 20 20:39 fase-1
+drwxr-xr-x 3 root root 4096 Oct 20 20:39 fase-2
+drwxr-xr-x 3 root root 4096 Oct 20 20:39 fase-3
+drwxr-xr-x 7 root root 4096 Oct 20 20:39 fase-4
+---FASE4---
+/dev-server/.opencode/work/sub/fase-4/:
+total 28
+drwxr-xr-x 7 root root 4096 Oct 20 20:39 .
+drwxr-xr-x 6 root root 4096 Oct 20 20:39 ..
+drwxr-xr-x 2 root root 4096 Oct 20 20:39 s1-fundacao
+drwxr-xr-x 2 root root 4096 Oct 20 20:42 s2-home
+drwxr-xr-x 2 root root 4096 Oct 20 20:39 s3-catalogo
+drwxr-xr-x 2 root root 4096 Oct 20 20:42 s4-ajustes
+drwxr-xr-x 2 root root 4096 Oct 20 20:42 s5-pratica
+
+/dev-server/.opencode/work/sub/fase-4/s1-fundacao:
+total 400
+drwxr-xr-x 2 root root   4096 Oct 20 20:39 .
+drwxr-xr-x 7 root root   4096 Oct 20 20:39 ..
+-rw-r--r-- 1 root root 123851 Oct 20 20:39 log-s1b.txt
+-rw-r--r-- 1 root root     59 Oct 20 20:39 log-s1c.txt
+-rw-r--r-- 1 root root  59047 Oct 20 20:39 log-s1-fundacao.txt
+-rw-r--r-- 1 root root 148653 Oct 20 20:39 log-s1.txt
+-rw-r--r-- 1 root root   8118 Oct 20 20:39 prd-project1-s1
+-rw-r--r-- 1 root root   2753 Oct 20 20:39 project1-s1
+-rw-r--r-- 1 root root  12214 Oct 20 20:39 report-s1-fundacao.md
+-rw-r--r-- 1 root root   1880 Oct 20 20:39 roadmap-proj1-s1
+-rw-r--r-- 1 root root      5 Oct 20 20:39 run-s1b.pid
+-rw-r--r-- 1 root root      6 Oct 20 20:39 run-s1c.pid
+-rw-r--r-- 1 root root      5 Oct 20 20:39 run-s1-fundacao.pid
+-rw-r--r-- 1 root root      5 Oct 20 20:39 run-s1.pid
+
+/dev-server/.opencode/work/sub/fase-4/s2-home:
+total 284
+drwxr-xr-x 2 root root   4096 Oct 20 20:42 .
+drwxr-xr-x 7 root root   4096 Oct 20 20:39 ..
+-rw-r--r-- 1 root root   2328 Oct 20 20:42 log-s2-home2.txt
+-rw-r--r-- 1 root root 250263 Oct 20 20:39 log-s2-home.txt
+-rw-r--r-- 1 root root   3500 Oct 20 20:39 prd-project1-s2
+-rw-r--r-- 1 root root   1663 Oct 20 20:39 project1-s2
+-rw-r--r-- 1 root root    768 Oct 20 20:39 roadmap-proj1-s2
+-rw-r--r-- 1 root root      5 Oct 20 20:42 run-s2-home2.pid
+-rw-r--r-- 1 root root      6 Oct 20 20:39 run-s2-home.pid
+
+/dev-server/.opencode/work/sub/fase-4/s3-catalogo:
+total 236
+drwxr-xr-x 2 root root   4096 Oct 20 20:39 .
+drwxr-xr-x 7 root root   4096 Oct 20 20:39 ..
+-rw-r--r-- 1 root root 195983 Oct 20 20:39 log-s3-catalogo.txt
+-rw-r--r-- 1 root root   5676 Oct 20 20:39 prd-project1-s3
+-rw-r--r-- 1 root root   1679 Oct 20 20:39 project1-s3
+-rw-r--r-- 1 root root   8417 Oct 20 20:39 report-s3-catalogo.md
+-rw-r--r-- 1 root root   1720 Oct 20 20:39 roadmap-proj1-s3
+-rw-r--r-- 1 root root      6 Oct 20 20:39 run-s3-catalogo.pid
+
+/dev-server/.opencode/work/sub/fase-4/s4-ajustes:
+total 92
+drwxr-xr-x 2 root root  4096 Oct 20 20:42 .
+drwxr-xr-x 7 root root  4096 Oct 20 20:39 ..
+-rw-r--r-- 1 root root  2587 Oct 20 20:42 log-s4-ajustes2.txt
+-rw-r--r-- 1 root root 57256 Oct 20 20:39 log-s4-ajustes.txt
+-rw-r--r-- 1 root root  3990 Oct 20 20:39 prd-project1-s4
+-rw-r--r-- 1 root root  1996 Oct 20 20:39 project1-s4
+-rw-r--r-- 1 root root   813 Oct 20 20:39 roadmap-proj1-s4
+-rw-r--r-- 1 root root     5 Oct 20 20:42 run-s4-ajustes2.pid
+[0m
