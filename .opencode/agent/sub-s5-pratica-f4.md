@@ -32,9 +32,6 @@ entrega verificada acima de velocidade. Workspace: /dev-server.
 ## project1
 # Projeto 1 — PTE Master Hub: plataforma completa, AI-first, de preparo para o PTE Academic
 
-> ⚠️⚠️⚠️ OBSERVAÇÃO IMPORTANTE ⚠️⚠️⚠️
-> NÃO TESTE NEM USE O OPENCODE PARA ESSA TAREFA (mas rode ele normalmente em background), pois ela exige o
-> máximo potencial agêntico — apenas deixe-o rodando em background para edições futuras após a conclusão completa.
 (todas as questões ja foram selecionadas e escolhidas, e estão zipadas na raiz do projeto em dev-server/pte-question-bank.zip ou extraidas e organizadas nos locais adequados dependendo do estagio em que estamos)
 
 ## 1. Propósito e resultado esperado
