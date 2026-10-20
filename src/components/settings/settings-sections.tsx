@@ -514,7 +514,7 @@ export function PrivacySection() {
         A leitura em voz alta usa o serviço de voz do próprio navegador, não um serviço do app. Se
         ele não estiver disponível, o app avisa e continua sem áudio — não simulamos pronúncia.
       </InlineNote>
-      <p className="flex items-center gap-2 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <Badge variant="outline" className="border-border/70 font-normal">
           Sem conta
         </Badge>
@@ -524,7 +524,7 @@ export function PrivacySection() {
         <Badge variant="outline" className="border-border/70 font-normal">
           Sem chave de IA no navegador
         </Badge>
-      </p>
+      </div>
     </SettingsSection>
   );
 }

@@ -83,8 +83,12 @@ Verificação visual (preview :8080, ferramenta de screenshot, console sem erros
   DIÁRIO", chips "EXPLORAR/PRÁTICA" na linha do título, card do plano sem esticamento,
   "2823 questões em 22 tipos" vindo do manifesto, atalho e item de menu "Ajustes" já resolvidos
   (sem "Em breve"), badge global "Em dia".
-- 390×1250: coluna única, sem overflow, "EM BREVE" na linha do título (não no meio da descrição),
-  alvos de toque ≥ 44 px.
+- 390×1250 (captura final, `/tmp/browser/agent-1792529483861.png`): coluna única sem overflow
+  horizontal, selo do item ("EXPLORAR"/"PRÁTICA") dentro do bloco do título (quebra para a linha
+  seguinte no mobile, nunca no meio da descrição), nav inferior com 4 destinos e alvos ≥ 44 px,
+  badge "Em dia" visível.
+- Caso "Em breve": enquanto `/ajustes` não resolvia no SSR, a captura em 390 px mostrou o selo
+  "EM BREVE" na linha do título — comportamento esperado do `useResolvedPath`, sem link quebrado.
 - Console do browser: apenas `[vite] connecting/connected` + aviso padrão do React DevTools —
   **zero erros**.
 

@@ -2809,3 +2809,57 @@ Index: /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
 [0m
 [0m→ [0mRead .opencode/work/sub/fase-4/s2-home/report-s2-home.md
 [0m⚙ [0mlovable-tools_browser--screenshot {"height":1250,"path":"/","width":390}
+[0m
+[0m← [0mEdit .opencode/work/sub/fase-4/s2-home/report-s2-home.md
+Index: /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+===================================================================
+--- /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
++++ /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+@@ -82,10 +82,14 @@
+   "PTE Master Hub — Seu plano de estudo de hoje", greeting "BOA NOITE · PTE ACADEMIC · PREPARO
+   DIÁRIO", chips "EXPLORAR/PRÁTICA" na linha do título, card do plano sem esticamento,
+   "2823 questões em 22 tipos" vindo do manifesto, atalho e item de menu "Ajustes" já resolvidos
+   (sem "Em breve"), badge global "Em dia".
+-- 390×1250: coluna única, sem overflow, "EM BREVE" na linha do título (não no meio da descrição),
+-  alvos de toque ≥ 44 px.
++- 390×1250 (captura final, `/tmp/browser/agent-1792529483861.png`): coluna única sem overflow
++  horizontal, selo do item ("EXPLORAR"/"PRÁTICA") dentro do bloco do título (quebra para a linha
++  seguinte no mobile, nunca no meio da descrição), nav inferior com 4 destinos e alvos ≥ 44 px,
++  badge "Em dia" visível.
++- Caso "Em breve": enquanto `/ajustes` não resolvia no SSR, a captura em 390 px mostrou o selo
++  "EM BREVE" na linha do título — comportamento esperado do `useResolvedPath`, sem link quebrado.
+ - Console do browser: apenas `[vite] connecting/connected` + aviso padrão do React DevTools —
+   **zero erros**.
+ 
+ ## 3. Decisões tomadas (registradas no meu PRD, §"Registro de decisões")
+
+[0m
+[0m$ [0mcd /dev-server && "$__LOVABLE_REAL_GIT" status --short | head -20
+M .opencode/work/sub/fase-4/s2-home/log-s2-home2.txt
+ M .opencode/work/sub/fase-4/s2-home/report-s2-home.md
+ M .opencode/work/sub/fase-4/s4-ajustes/log-s4-ajustes2.txt
+ M .opencode/work/sub/fase-4/s5-pratica/log-s5-pratica2.txt
+ M .opencode/work/sub/fase-4/s5-pratica/roadmap-proj1-s5
+?? .opencode/work/sub/fase-4/s4-ajustes/report-s4-ajustes.md
+?? .opencode/work/sub/fase-4/s5-pratica/report-s5-pratica.md
+[0m
+Entrega do pacote **s2-home** fechada e verificada.
+
+## O que foi feito
+- **F4.1.1** — `buildDayPlan` pura em `src/lib/app/plano-do-dia.ts` (222 linhas) com as 5 regras do contrato: fila vencida → `/sessoes` (`null` nunca vira 0), seção menos coberta → `/catalogo`, `examDate` nulo **ou vencido** → `/ajustes`, zero promessa de estimativa/prontidão, teto de 4 itens e ordem determinística.
+- **F4.1.2** — Home em `src/routes/index.tsx` com `head()` próprio, meta/data da prova, plano do dia, atalhos, progresso lido só em `useEffect` via `getProgressLayer()`, estados loading/unavailable/error/ready, contagens exclusivamente do manifesto.
+- **Correções reais de UI** (vistas em screenshot): selo "Em breve" movido para o bloco do título (antes partia a descrição em 390 px), `lg:items-start` no grid (antes o card do plano esticava vazio no desktop) e saudação por hora local hidratação-safe.
+- **Testes**: 22 → **24** (destinos reais + rótulos das 4 seções).
+- PRD com decisões 1–7 registradas e roadmap com F4.1.1–F4.1.4 marcados.
+
+## Evidências
+- `bunx vitest run src/test/app/plano-do-dia.test.ts` → **24/24 passed**, exit 0.
+- `bunx tsgo --noEmit` → **exit 0**, saída vazia (projeto inteiro).
+- Greps: nenhum literal de contagem, nenhuma cor hardcoded, nenhum acesso direto a storage/env.
+- Preview :8080 em 1280×1000 e 390×1250: console sem erros, coluna única sem overflow, `/ajustes` resolvido, badge "Em dia".
+- `routeTree.gen.ts` só foi alterado por regeneração automática (+42 linhas das rotas dos irmãos) — nenhuma edição manual.
+
+## Pendências
+Nenhuma bloqueante. As duas instabilidades de ambiente (tsgo transitório em arquivos dos pacotes s4/s5 e cache do router SSR) se resolveram sozinhas e estão documentadas com evidência no relatório; build/lint/Playwright globais continuam sendo do agente principal.
+
+**Relatório:** `/dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md`

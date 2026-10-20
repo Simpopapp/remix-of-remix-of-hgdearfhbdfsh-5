@@ -4385,3 +4385,445 @@ grep -n "\[x\]" .opencode/work/sub/fase-4/s4-ajustes/roadmap-proj1-s4
 9:- [x] F4.3.4 — Testes `ajustes.test.ts` completos (patch parcial, máquina de import, defaults)
 10:- [x] F4.3.5 — Relatório `report-s4-ajustes.md` com evidências
 [0m
+[0m← [0mWrite .opencode/work/sub/fase-4/s4-ajustes/report-s4-ajustes.md
+Wrote file successfully.
+[0m
+## Objective
+- Concluir a Fase 4 / s4-ajustes: entregar `src/routes/ajustes.tsx` (Meta/Timers/TTS/Studie Plus/Backup/Armazenamento/Privacidade), módulos puros em `src/components/settings/`, `src/test/app/ajustes.test.ts` e o relatório `report-s4-ajustes.md`.
+- Não refazer `src/lib/app/settings.ts` nem `src/test/app/settings.test.ts` (já prontos, 17 testes verdes).
+
+## Important Details
+- Contrato de settings (`@/lib/app/settings`): `DEFAULT_SETTINGS` (`meta:{targetScore:50, examDate:null}`, `practice:{timersEnabled:true, timerScale}`, `tts`, `studiePlus:{enabled:false, word/sentence/pronunciation:false, mode:"ai"}`), `TARGET_SCORES=[50,58,65,79]`, `TIMER_SCALES=[1,1.5,2]`, `TTS_RATE_MIN/MAX`, `clampSpeechRate`, `normalizeAppSettings`, `applySettingsPatch`, `readAppSettings(store)`, `updateAppSettings(store, patch)`, tipos `AppSettings`, `DeepPartialAppSettings`, `TargetScore`, `TimerScale`, `StudiePlusMode`.
+- `BackupIo` (`@/lib/app/backup-io`): `inspect`, `import(raw,{strategy,saveUndo})`, `undo`, `exportJson`, `listQuarantine`, `exportQuarantine`; `BackupPreview` com `migrated`, `version`, `currentVersion`, `snapshotCount`, `scoredSnapshotCount`, `attemptCount`, `settingsKeys`, `newQuestionCount`, `sharedQuestionCount`, `improvedBestScoreCount`, `typeConflictCount`; `QuarantineReason = unreadable_json|not_object|wrong_format|missing_version|invalid_version|future_version|corrupt_payload`; `CURRENT_BACKUP_VERSION = 2`, `SUPPORTED_BACKUP_VERSIONS=[1,2]`, `BACKUP_FORMAT="pte-master-hub-backup"`.
+- `media.ts`: `estimateQuota()`, `totalBytes()`, `checkQuota(bytes)`, `QUOTA_WARN_RATIO=0.8`, `QUOTA_CRITICAL_RATIO=0.95`, `QuotaLevel="ok"|"warn"|"critical"|"unknown"`, `QuotaEstimate={usage,quota,available,ratio}`.
+- `progress-client.ts`: `getProgressLayer()` / `isProgressAvailable()` — browser-only, singleton, **não** exportados por `@/lib/app`; nunca fechar a layer no unmount; só chamar em `useEffect`/eventos.
+- `@/lib/speech`: `isSpeechAvailable()`, `listEnglishVoices()`, `onVoicesChanged(handler)→unsubscribe`, `speak(text,{voiceUri,rate})→{voiceName,started,cancel}`; `SpeechSynthesisVoice` tem `voiceURI`, `localService`.
+- `@/domain`: `localDayKey()`, `isLocalDayKey()` (rejeita `2026-02-31`), `emptyAggregates(iso)`, `TASK_TYPES` etc.
+- UI disponível: `Button`, `Switch`, `Skeleton`, `Badge`, `Input`, `sonner` (`Toaster` no `__root.tsx`); tokens `--warning`/`--success`/`--destructive` confirmados em `src/styles.css`.
+- Vitest: jsdom, `globals:true`, alias `@`→`src`, include `src/**/*.{test,spec}.{ts,tsx}`; arquivo de teste é `.ts` (sem JSX).
+- tsgo estrito: `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess` (usar `?? 0`, optional props condicionais).
+- Erro de tsgo remanescente é **fora do escopo**: `src/routes/praticar.$type.tsx(85,48): error TS2345` — pertence ao agente paralelo s5-pratica; não editar.
+- `src/routeTree.gen.ts` já inclui `/ajustes`; `/ajustes` já consta em `src/components/layout/nav-items.ts`.
+
+## Work State
+### Completed
+- `src/components/settings/settings-patch.ts`: `MetaDraft`, `PracticeDraft`, `TtsDraft` (**agora com `enabled: boolean`**), `StudiePlusDraft`, `SettingsDraft`, `normalizeExamDateInput`, `buildSettingsPatch` (só seções presentes; rate clampado; voiceUri trim/`null`), `defaultsPatch`, `isStudiePlusActive`.
+- `src/components/settings/format.ts`: `formatBytes`, `formatPercent`, `formatDateTime`, `quotaLevelLabel`, `quotaLevelAdvice`, `describeQuarantineReason`, `backupFileName`, `formatDayKey` (adicionado).
+- `src/components/settings/import-flow.ts`: `BackupService = Pick<BackupIo,"inspect"|"import"|"undo">`, `ImportStrategy`, `ImportFlowState` (`empty|preview|quarantined|imported|undone|failed`), `inspectBackupFile`, `applyBackupImport`, `undoBackupImport`, `describeInspection`, `inspectionHighlights`.
+- `src/components/settings/ui.tsx`: `SettingsSection`, `ToggleRow`, `SegmentedControl` (role radiogroup, `min-h-11`), `FieldRow`, `InlineNote` (`info|warning|success|danger`, aceita `title`/`role`/children), `StatusPill`.
+- `src/components/settings/download.ts`: `downloadTextFile(fileName, text, mimeType)` com guards de `document`/`URL.createObjectURL`, revoke após 10s, retorna `boolean`.
+- `src/components/settings/settings-sections.tsx`: `SectionProps`, `SpeechVoiceOption`, `TtsSectionProps`, `MetaSection`, `PracticeSection`, `TtsSection`, `StudiePlusSection`, `PrivacySection` (ícone `ShieldCheck`); TTS usa `speak()` real e reporta voz usada/indisponível.
+- `src/components/settings/backup-section.tsx`: `BackupSection({layer, onDataChange?})` — export JSON via `downloadTextFile` + `localDayKey()`, input file oculto, prévia obrigatória, mesclar / substituir em 2 passos, desfazer quando `undoAvailable`, export/list de quarentena, avisos honestos de falha.
+- `src/components/settings/storage-section.tsx`: `levelFromEstimate(estimate)`, `StorageSection({quota, recordingsBytes, loading, onRefresh})` com progressbar acessível e avisos por nível.
+- `src/routes/ajustes.tsx`: rota `/ajustes` com `head()` (title/description/og), estados `LoadState`/`SaveState`, abertura do singleton, leitura de settings, detecção de vozes, `savePatch` com toast de erro, `refreshStorage`, `handleBackupDataChange` (relê settings + quota após import/undo), skeletons e cards de erro (`unavailable`/`error`).
+- `src/test/app/ajustes.test.ts`: 20 testes verdes — patch parcial preserva outras seções, clamp de rate/voiceUri, datas inválidas, `defaultsPatch` desliga Studie Plus, máquina de importação (prévia sem import, quarentena com `saveUndo:false`, vazio→failed, undo/no_undo, erro de serviço), integração real (`exportJson`→`inspect`→merge preservando local→undo; JSON ilegível e versão 999 em quarentena sem tocar snapshots), formatos/textos.
+- Suíte completa: `bunx vitest run` → **26 arquivos, 385 testes, todos verdes**.
+- `bunx tsgo --noEmit`: apenas o erro alheio de `praticar.$type.tsx`; arquivos do s4 limpos.
+
+### Active
+- Falta escrever `.opencode/work/sub/fase-4/s4-ajustes/report-s4-ajustes.md`.
+- Verificação visual pendente: `curl http://localhost:8080/ajustes` retornou **404** (dev server pode estar parado ou ainda não servindo a rota) — precisa confirmar com o servidor ativo antes de screenshot.
+
+### Blocked
+- `bunx tsgo --noEmit` não fica 100% verde por causa de `src/routes/praticar.$type.tsx(85,48) TS2345` (arquivo do agente s5-pratica). Reexecutar depois que s5 corrigir; não editar o arquivo.
+- Confirmação visual de `/ajustes` bloqueada enquanto o dev server em `localhost:8080` não responder.
+
+## Next Move
+1. Verificar se o dev server está no ar (`curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/ajustes`) e, se sim, inspecionar/validar a tela `/ajustes` (layout, foco, estados de erro, TTS, backup); se 404 persistir, aguardar/avisar o agente principal do scaffold.
+2. Reexecutar `bunx tsgo --noEmit` (esperando verde após s5) e então escrever `.opencode/work/sub/fase-4/s4-ajustes/report-s4-ajustes.md` documentando: arquivos criados, contratos consumidos, 20 testes novos/385 na suíte, garantias de honestidade (prévia obrigatória, quarentena readonly, sem áudio no JSON, TTS real ou indisponível) e a pendência de tsgo fora do recorte.
+
+## Relevant Files
+- `src/routes/ajustes.tsx`: rota da tela de Ajustes (criada).
+- `src/components/settings/settings-sections.tsx`: seções Meta/Practice/TTS/StudiePlus/Privacy.
+- `src/components/settings/backup-section.tsx`: UI de export/prévia/merge/replace/undo/quarentena.
+- `src/components/settings/storage-section.tsx`: painel de quota e `levelFromEstimate`.
+- `src/components/settings/download.ts`, `format.ts`, `import-flow.ts`, `settings-patch.ts`, `ui.tsx`: módulos puros consumidos pela rota.
+- `src/test/app/ajustes.test.ts`: 20 testes (todos verdes).
+- `src/test/app/helpers.ts`: `makeDb`, `clockAt`, `scoredEvaluation`, `makeAttempt`, `makeSnapshot`, `uniqueDbName`.
+- `src/lib/app/settings.ts`, `src/lib/app/backup-io.ts`, `src/lib/app/storage.ts`, `src/lib/app/media.ts`, `src/lib/app/progress-client.ts`, `src/lib/speech.ts`: contratos consumidos (não alterar).
+- `src/routes/praticar.$type.tsx`: erro TS2345 alheio que impede tsgo verde (não editar).
+- `src/routeTree.gen.ts`: já contém `/ajustes`.
+- `.opencode/work/sub/fase-4/s4-ajustes/`: destino do `report-s4-ajustes.md` (pendente).
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+[0m$ [0mcurl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/ajustes; tail -3 /tmp/dev-server-logs/dev-server.log
+200
+8:49:46 PM [vite] (client) page reload src/routeTree.gen.ts
+8:49:46 PM [vite] (ssr) page reload src/routeTree.gen.ts
+8:49:46 PM [vite] (ssr) program reload
+[0m
+[0m⚙ [0mlovable-tools_browser--screenshot {"path":"/ajustes","width":1280,"height":1800}
+[0m
+[0m$ [0mgrep -n "<p\|</p>\|<div" src/components/settings/ui.tsx | head -60
+49:        <div className="flex items-start gap-3">
+56:          <div className="space-y-1">
+60:            <p
+65:            </p>
+70:      <div className="space-y-5 p-4 sm:p-5">{children}</div>
+98:    <div className="flex min-h-11 items-start justify-between gap-4">
+99:      <div className="space-y-1">
+103:        <p id={descriptionId} className="max-w-xl text-xs leading-relaxed text-muted-foreground">
+105:        </p>
+146:    <div className="space-y-1.5">
+147:      <p className="text-sm font-medium leading-snug">{label}</p>
+149:        <p className="max-w-xl text-xs leading-relaxed text-muted-foreground">{description}</p>
+151:      <div
+201:    <div className="space-y-1.5">
+206:        <p id={descriptionId} className="max-w-xl text-xs leading-relaxed text-muted-foreground">
+208:        </p>
+236:    <div
+240:      {title === undefined ? null : <p className="mb-1 font-medium">{title}</p>}
+241:      <div className="space-y-1">{children}</div>
+[0m
+[0m$ [0mgrep -n "<p\b" -A4 src/components/settings/settings-sections.tsx src/components/settings/backup-section.tsx src/components/settings/storage-section.tsx src/routes/ajustes.tsx | head -80
+src/components/settings/settings-sections.tsx:116:          <p className="text-xs text-muted-foreground" role="status">
+src/components/settings/settings-sections.tsx-117-            {settings.meta.examDate === null
+src/components/settings/settings-sections.tsx-118-              ? "Nenhuma data marcada."
+src/components/settings/settings-sections.tsx-119-              : `Prova marcada para ${formatDayKey(settings.meta.examDate)}.`}
+src/components/settings/settings-sections.tsx-120-          </p>
+--
+src/components/settings/settings-sections.tsx:326:              <p className="text-xs text-muted-foreground">
+src/components/settings/settings-sections.tsx-327-                Nenhuma voz em inglês foi encontrada neste navegador. O áudio não será produzido até
+src/components/settings/settings-sections.tsx-328-                que uma voz esteja instalada no sistema.
+src/components/settings/settings-sections.tsx-329-              </p>
+src/components/settings/settings-sections.tsx-330-            ) : null}
+--
+src/components/settings/settings-sections.tsx:365:            <p className="text-xs leading-relaxed text-muted-foreground" role="status">
+src/components/settings/settings-sections.tsx-366-              {spoken.status === "started"
+src/components/settings/settings-sections.tsx-367-                ? `Falando com a voz “${spoken.voiceName}”.`
+src/components/settings/settings-sections.tsx-368-                : spoken.status === "unavailable"
+src/components/settings/settings-sections.tsx-369-                  ? "Nenhuma voz em inglês pôde falar agora. Nada foi alterado."
+--
+src/components/settings/settings-sections.tsx:517:      <p className="flex items-center gap-2 text-xs text-muted-foreground">
+src/components/settings/settings-sections.tsx-518-        <Badge variant="outline" className="border-border/70 font-normal">
+src/components/settings/settings-sections.tsx-519-          Sem conta
+src/components/settings/settings-sections.tsx-520-        </Badge>
+src/components/settings/settings-sections.tsx-521-        <Badge variant="outline" className="border-border/70 font-normal">
+--
+src/components/settings/backup-section.tsx:187:            <p className="max-w-xl text-xs leading-relaxed text-muted-foreground">
+src/components/settings/backup-section.tsx-188-              O arquivo inclui os registros por questão, os agregados, os ajustes e até as últimas
+src/components/settings/backup-section.tsx-189-              500 tentativas do histórico. As gravações de áudio ficam neste dispositivo e não
+src/components/settings/backup-section.tsx-190-              entram no JSON.
+src/components/settings/backup-section.tsx-191-            </p>
+--
+src/components/settings/backup-section.tsx:210:            <p className="max-w-xl text-xs leading-relaxed text-muted-foreground">
+src/components/settings/backup-section.tsx-211-              Escolha o JSON exportado pelo app. Você verá o que o arquivo contém e os conflitos
+src/components/settings/backup-section.tsx-212-              antes de decidir entre mesclar e substituir.
+src/components/settings/backup-section.tsx-213-            </p>
+src/components/settings/backup-section.tsx-214-          </div>
+--
+src/components/settings/backup-section.tsx:242:                <p className="break-all text-sm font-medium">{flow.fileName}</p>
+src/components/settings/backup-section.tsx:243:                <p className="text-xs text-muted-foreground">
+src/components/settings/backup-section.tsx-244-                  {formatBytes(flow.size)} · {describeInspection(flow.preview)}
+src/components/settings/backup-section.tsx-245-                </p>
+src/components/settings/backup-section.tsx:246:                <p className="text-xs text-muted-foreground">
+src/components/settings/backup-section.tsx-247-                  Criado em {formatDateTime(flow.preview.createdAt)}
+src/components/settings/backup-section.tsx-248-                  {flow.preview.device === null ? "" : ` · ${flow.preview.device}`}
+src/components/settings/backup-section.tsx-249-                </p>
+src/components/settings/backup-section.tsx-250-              </div>
+--
+src/components/settings/backup-section.tsx:260:              <p className="text-xs text-muted-foreground">
+src/components/settings/backup-section.tsx-261-                O arquivo não traz nada novo em relação ao que já está neste dispositivo.
+src/components/settings/backup-section.tsx-262-              </p>
+src/components/settings/backup-section.tsx-263-            )}
+src/components/settings/backup-section.tsx-264-
+--
+src/components/settings/backup-section.tsx:273:                <p>
+src/components/settings/backup-section.tsx-274-                  Substituir troca os registros, os agregados e os ajustes deste dispositivo pelos
+src/components/settings/backup-section.tsx-275-                  do arquivo. Você poderá desfazer uma vez, logo após a importação.
+src/components/settings/backup-section.tsx-276-                </p>
+src/components/settings/backup-section.tsx-277-                <div className="mt-2 flex flex-wrap gap-2">
+--
+src/components/settings/backup-section.tsx:324:            <p>
+src/components/settings/backup-section.tsx-325-              {flow.strategy === "merge" ? "Mesclado" : "Substituído"} com {flow.snapshotCount}{" "}
+src/components/settings/backup-section.tsx-326-              {flow.snapshotCount === 1 ? "registro de questão" : "registros de questão"} e{" "}
+src/components/settings/backup-section.tsx-327-              {flow.attemptCount} {flow.attemptCount === 1 ? "tentativa" : "tentativas"} no
+src/components/settings/backup-section.tsx-328-              histórico.
+--
+src/components/settings/backup-section.tsx:354:              <p className="text-xs">
+src/components/settings/backup-section.tsx-355-                O estado anterior não foi guardado nesta importação, então não há como desfazer.
+src/components/settings/backup-section.tsx-356-              </p>
+src/components/settings/backup-section.tsx-357-            ) : null}
+src/components/settings/backup-section.tsx-358-          </InlineNote>
+--
+src/components/settings/backup-section.tsx:363:            <p>
+src/components/settings/backup-section.tsx-364-              Os dados anteriores voltaram.
+src/components/settings/backup-section.tsx-365-              {flow.createdAt.length > 0
+src/components/settings/backup-section.tsx-366-                ? ` Estado restaurado de ${formatDateTime(flow.createdAt)}.`
+src/components/settings/backup-section.tsx-367-                : ""}
+--
+src/components/settings/backup-section.tsx:374:            <p>{describeQuarantineReason(flow.record.reason)}</p>
+src/components/settings/backup-section.tsx:375:            <p>
+src/components/settings/backup-section.tsx-376-              Registro {flow.record.id} · {formatDateTime(flow.record.createdAt)} ·{" "}
+src/components/settings/backup-section.tsx-377-              {formatBytes(flow.record.size)}
+[0m
+[0m→ [0mRead src/components/settings/backup-section.tsx[90m [offset=265, limit=30][0m
+[0m
+[0m$ [0msed -n 225,250p src/components/settings/ui.tsx; echo ===; sed -n 505,535p src/components/settings/settings-sections.tsx
+tone = "info",
+  title,
+  children,
+  role,
+}: {
+  tone?: NoteTone;
+  title?: string;
+  children: ReactNode;
+  role?: "status" | "alert";
+}) {
+  return (
+    <div
+      role={role}
+      className={cn("rounded-lg border px-3 py-2.5 text-xs leading-relaxed", NOTE_CLASSES[tone])}
+    >
+      {title === undefined ? null : <p className="mb-1 font-medium">{title}</p>}
+      <div className="space-y-1">{children}</div>
+    </div>
+  );
+}
+
+/** Rótulo curto de estado (não é botão). */
+export function StatusPill({
+  children,
+  tone = "neutral",
+}: {
+===
+          Você pode estudar sem enviar respostas: a prática local e a revisão continuam funcionando.
+        </li>
+        <li>
+          <span className="font-medium text-foreground">Gravações de fala.</span> O áudio é guardado
+          no dispositivo para você reouvir e para a avaliação de pronúncia quando ela existir. Ele
+          só é enviado ao serviço de IA quando uma avaliação de fala é solicitada.
+        </li>
+      </ul>
+      <InlineNote tone="info" title="Sobre o serviço de voz">
+        A leitura em voz alta usa o serviço de voz do próprio navegador, não um serviço do app. Se
+        ele não estiver disponível, o app avisa e continua sem áudio — não simulamos pronúncia.
+      </InlineNote>
+      <p className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Badge variant="outline" className="border-border/70 font-normal">
+          Sem conta
+        </Badge>
+        <Badge variant="outline" className="border-border/70 font-normal">
+          Sem nuvem de dados do aluno
+        </Badge>
+        <Badge variant="outline" className="border-border/70 font-normal">
+          Sem chave de IA no navegador
+        </Badge>
+      </p>
+    </SettingsSection>
+  );
+}
+[0m
+[0m$ [0msed -n 1,50p src/components/ui/badge.tsx
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+
+import { cn } from "@/lib/utils";
+
+const badgeVariants = cva(
+  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default: "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
+        secondary:
+          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        destructive:
+          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
+        outline: "text-foreground",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  },
+);
+
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
+
+function Badge({ className, variant, ...props }: BadgeProps) {
+  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
+}
+
+export { Badge, badgeVariants };
+[0m
+[0m$ [0mgrep -n "Badge" src/components/settings/*.tsx src/routes/ajustes.tsx
+src/components/settings/settings-sections.tsx:19:import { Badge } from "@/components/ui/badge";
+src/components/settings/settings-sections.tsx:518:        <Badge variant="outline" className="border-border/70 font-normal">
+src/components/settings/settings-sections.tsx:520:        </Badge>
+src/components/settings/settings-sections.tsx:521:        <Badge variant="outline" className="border-border/70 font-normal">
+src/components/settings/settings-sections.tsx:523:        </Badge>
+src/components/settings/settings-sections.tsx:524:        <Badge variant="outline" className="border-border/70 font-normal">
+src/components/settings/settings-sections.tsx:526:        </Badge>
+[0m
+[0m← [0mEdit src/components/settings/settings-sections.tsx
+Index: /dev-server/src/components/settings/settings-sections.tsx
+===================================================================
+--- /dev-server/src/components/settings/settings-sections.tsx
++++ /dev-server/src/components/settings/settings-sections.tsx
+@@ -513,9 +513,9 @@
+ <InlineNote tone="info" title="Sobre o serviço de voz">
+   A leitura em voz alta usa o serviço de voz do próprio navegador, não um serviço do app. Se
+   ele não estiver disponível, o app avisa e continua sem áudio — não simulamos pronúncia.
+ </InlineNote>
+-<p className="flex items-center gap-2 text-xs text-muted-foreground">
++<div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+   <Badge variant="outline" className="border-border/70 font-normal">
+     Sem conta
+   </Badge>
+   <Badge variant="outline" className="border-border/70 font-normal">
+
+[0m
+[0m$ [0mgrep -n "Sem chave de IA no navegador" -A2 src/components/settings/settings-sections.tsx
+525:          Sem chave de IA no navegador
+526-        </Badge>
+527-      </p>
+[0m
+[0m← [0mEdit src/components/settings/settings-sections.tsx
+Index: /dev-server/src/components/settings/settings-sections.tsx
+===================================================================
+--- /dev-server/src/components/settings/settings-sections.tsx
++++ /dev-server/src/components/settings/settings-sections.tsx
+@@ -523,8 +523,8 @@
+         </Badge>
+         <Badge variant="outline" className="border-border/70 font-normal">
+           Sem chave de IA no navegador
+         </Badge>
+-      </p>
++      </div>
+     </SettingsSection>
+   );
+ }
+
+[0m
+[0m$ [0mbunx eslint --fix src/components/settings/settings-sections.tsx 2>&1 | tail -3; bunx vitest run src/test/app/ajustes.test.ts 2>&1 | tail -4
+Tests  20 passed (20)
+   Start at  20:54:01
+   Duration  839ms (environment 60%, transform 20%, setup 9%, import 6%, tests 4%, worker 1%)
+[0m
+[0m⚙ [0mlovable-tools_browser--screenshot {"height":1800,"path":"/ajustes","width":1280}
+[0m
+[0m$ [0mpython3 - <<'EOF'
+import re,glob
+for f in glob.glob('src/components/settings/*.tsx')+['src/routes/ajustes.tsx']:
+    s=open(f).read()
+    for m in re.finditer(r'<p\b[^>]*>', s):
+        # find matching </p> naive
+        end=s.find('</p>', m.end())
+        seg=s[m.end():end]
+        if '<div' in seg or '<Badge' in seg or '<InlineNote' in seg or '<img' in seg or '<ul' in seg:
+            print(f, s[:m.start()].count('\n')+1, repr(seg[:80]))
+EOF
+(no output)
+[0m
+[0m⚙ [0mlovable-tools_browser--screenshot {"height":600,"path":"/progresso","width":1280}
+[0m
+[0m$ [0mpython3 - <<'EOF'
+import urllib.request,re
+html=urllib.request.urlopen('http://localhost:8080/ajustes').read().decode('utf-8','replace')
+for m in re.finditer(r'<p\b[^>]*>', html):
+    end=html.find('</p>', m.end())
+    if end==-1: continue
+    seg=html[m.end():end]
+    if '<div' in seg or '<ul' in seg:
+        print('line', html[:m.start()].count('\n')+1, '|', html[m.start():m.start()+200].replace('\n',' '))
+EOF
+(no output)
+[0m
+[0m$ [0mgrep -n "description={" src/components/settings/*.tsx src/routes/ajustes.tsx | head -30
+(no output)
+[0m
+[0m$ [0msed -n 250,290p src/components/settings/ui.tsx; grep -rn "<p\b" src/components/settings/*.tsx | wc -l
+}: {
+  children: ReactNode;
+  tone?: NoteTone | "neutral";
+}) {
+  const toneClass =
+    tone === "neutral"
+      ? "border-border/70 text-muted-foreground"
+      : tone === "info"
+        ? "border-border/70 text-foreground"
+        : tone === "warning"
+          ? "border-warning/40 bg-warning/10 text-warning-foreground"
+          : tone === "success"
+            ? "border-success/40 bg-success/10 text-success-foreground"
+            : "border-destructive/50 bg-destructive/10 text-destructive";
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-medium",
+        toneClass,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+32
+[0m
+[0m$ [0mmkdir -p /tmp/browser/ajustes-check && cat > /tmp/browser/ajustes-check/console.py <<'EOF'
+from playwright.sync_api import sync_playwright
+with sync_playwright() as p:
+    b = p.chromium.launch()
+    page = b.new_page(viewport={"width":1280,"height":900})
+    msgs=[]
+    page.on("console", lambda m: msgs.append((m.type, [a.json_value() if a.json_value() is not None else str(a) for a in m.args])))
+    page.goto("http://localhost:8080/ajustes", wait_until="networkidle")
+    page.wait_for_timeout(1500)
+    for t,args in msgs:
+        if t in ("error","warning"):
+            print("=== ",t)
+            for a in args:
+                s=str(a)
+                print(s[:4000])
+    b.close()
+EOF
+python3 /tmp/browser/ajustes-check/console.py 2>&1 | head -60
+Skipping host requirements validation logic because `PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS` env variable is set.
+===  error
+<%s> cannot contain a nested %s.
+See this log for the ancestor stack trace.
+p
+<div>
+===  error
+In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s
+<div>
+p
+
+
+  ...
+    <OutletImpl data-tsd-source="/src/route...">
+      <Suspense fallback={null}>
+        <MatchImpl routeId="/ajustes">
+          <MatchView router={{...}} match={{id:"/ajust...", ...}}>
+            <MatchInnerImpl match={{id:"/ajust...", ...}}>
+              <Lazy>
+                <AjustesPage>
+                  <main className="mx-auto w-..." data-tsd-source="/src/route...">
+                    <header>
+                    <div className="mt-8 space..." data-tsd-source="/src/route...">
+                      <MetaSection>
+                      <PracticeSection>
+                      <TtsSection>
+                      <StudiePlusSection>
+                      <BackupSection>
+                      <StorageSection>
+                      <PrivacySection data-tsd-source="/src/route...">
+                        <SettingsSection id="privacidade" icon={{...}} title="Privacidad..." description="O que fica..." ...>
+                          <section aria-labelledby="privacidad..." aria-describedby="privacidad..." ...>
+                            <header>
+                            <div className="space-y-5 ..." data-tsd-source="/src/compo...">
+                              <ul>
+                              <InlineNote>
+>                             <p
+>                               className="flex items-center gap-2 text-xs text-muted-foreground"
+>                               data-tsd-source="/src/components/settings/settings-sections.tsx:517:7"
+>                             >
+                                <Badge variant="outline" className="border-bor..." data-tsd-source="/src/compo...">
+>                                 <div
+>                                   className="inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs transi..."
+>                                   data-tsd-source="/src/components/settings/settings-sections.tsx:518:9"
+>                                 >
+                                ...
+[0m

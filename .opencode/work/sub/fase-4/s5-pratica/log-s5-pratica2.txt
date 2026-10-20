@@ -5417,3 +5417,93 @@ Environment  jsdom was created 26 times · 17.44s total, 59% of tracked time
 54:  path: '/praticar/$type',
 75:  '/praticar/$type': typeof PraticarTypeRoute
 [0m
+[0m← [0mWrite .opencode/work/sub/fase-4/s5-pratica/report-s5-pratica.md
+Wrote file successfully.
+[0m
+[0m→ [0mRead .opencode/work/sub/fase-4/s5-pratica/roadmap-proj1-s5
+[0m
+[0m$ [0mcd /dev-server/.opencode/work/sub/fase-4/s5-pratica && python3 - <<'EOF'
+from pathlib import Path
+p = Path("roadmap-proj1-s5")
+s = p.read_text()
+s = s.replace("- [ ] F4.4.1", "- [x] F4.4.1").replace("- [ ] F4.4.2", "- [x] F4.4.2").replace("- [ ] F4.4.3", "- [x] F4.4.3").replace("- [ ] F4.4.4", "- [x] F4.4.4")
+s = s.replace("dono exclusivo respeitado.", "dono exclusivo respeitado. · Resultado: vitest 49/49 · tsgo exit 0 · suíte 388/388.")
+p.write_text(s)
+print(s)
+EOF
+# Roadmap do subagente s5-pratica (Fase 4 — onda 1)
+
+- [x] F4.4.1 — `timerForType` puro + testes com specs reais do exam-spec
+      · Gates: vitest do arquivo verde · tsgo limpo
+- [x] F4.4.2 — Rota `/praticar/$type` (validação do tipo, head() dinâmico, ficha do exam-spec,
+      contagem derivada, slot honesto do motor, timer ajustável)
+      · Gates: tsgo limpo · tipo inválido → notFound
+- [x] F4.4.3 — Estrutura `src/components/practice/**` pronta para os motores da Fase 6
+- [x] F4.4.4 — Relatório `report-s5-pratica.md` com evidências
+
+Gates finais do pacote: `bunx vitest run src/test/app/practice-timer.test.ts` · `bunx tsgo --noEmit` ·
+dono exclusivo respeitado. · Resultado: vitest 49/49 · tsgo exit 0 · suíte 388/388.
+[0m
+[0m$ [0mls -l .opencode/work/sub/fase-4/s5-pratica/report-s5-pratica.md; ls src/test/app | grep -i tmp; echo "---git---"; git status --short | grep -E "practice|praticar|routeTree|s5-pratica"
+-rw-r--r-- 1 root root 11329 Oct 20 20:51 .opencode/work/sub/fase-4/s5-pratica/report-s5-pratica.md
+---git---
+ M .opencode/work/sub/fase-4/s5-pratica/log-s5-pratica2.txt
+ M .opencode/work/sub/fase-4/s5-pratica/roadmap-proj1-s5
+?? .opencode/work/sub/fase-4/s5-pratica/report-s5-pratica.md
+[0m
+[0m$ [0mgit log --oneline -3; git show --stat HEAD | head -20; git diff HEAD --stat -- src | head
+649e84e Changes
+ca2e3cd Changes
+ee715ee Changes
+commit 649e84e2060e6fdddef608b0bb45e49e46c3504f
+Author: gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com>
+Date:   Tue Oct 20 20:51:27 2026 +0000
+
+    Changes
+    
+    Co-authored-by: Simpopapp <185516535+Simpopapp@users.noreply.github.com>
+
+ .opencode/work/sub/fase-4/s2-home/log-s2-home2.txt |  746 ++++++++++++
+ .opencode/work/sub/fase-4/s2-home/prd-project1-s2  |   23 +-
+ .../work/sub/fase-4/s2-home/report-s2-home.md      |  147 +++
+ .opencode/work/sub/fase-4/s2-home/roadmap-proj1-s2 |    8 +-
+ .../work/sub/fase-4/s4-ajustes/log-s4-ajustes2.txt |  683 +++++++++++
+ .../work/sub/fase-4/s4-ajustes/prd-project1-s4     |   25 +-
+ .../work/sub/fase-4/s4-ajustes/roadmap-proj1-s4    |   13 +-
+ .../work/sub/fase-4/s5-pratica/log-s5-pratica2.txt | 1260 ++++++++++++++++++++
+ .../work/sub/fase-4/s5-pratica/prd-project1-s5     |   34 +-
+ src/components/practice/engine-slot.tsx            |    6 +-
+ src/components/practice/spec-format.ts             |    4 +-
+ src/components/practice/task-spec-card.tsx         |    6 +-
+[0m
+[0m$ [0mgit status --short -- src | head; echo "---"; git show HEAD:src/test/app/practice-timer.test.ts | grep -c "routeHead"; git show HEAD:src/routes/praticar.\$type.tsx 2>/dev/null | head -2 || git show "HEAD:src/routes/praticar.\$type.tsx" | head -2
+---
+3
+/**
+ * `/praticar/$type` — shell genérico de prática (Fase 4 — s5-pratica).
+[0m
+Entrega concluída. Resumo:
+
+## O que foi entregue
+
+**F4.4.1 — `timerForType`**
+- `src/lib/app/practice-timer.ts`: conversão dos tempos reais do `exam-spec` para treino (`shared_section`/`until_audio` → `responseMs: null`, escala 1×/1,5×/2×, `timersEnabled: false` sem contagem), máquina de estados pura alimentada por delta real de relógio e formatação pt-BR.
+- `src/test/app/practice-timer.test.ts`: **49 testes** (22 tipos, 4 formatos reais, escalas, pausa/retomada, contrato da rota).
+
+**F4.4.2 — Rota `/praticar/$type`**
+- `src/routes/praticar.$type.tsx`: `beforeLoad` → 404 para tipo inventado, `head()` dinâmico por tipo, ficha completa vinda de `EXAM_TASKS`/`EXAM_META`/`EXAM_SOURCES`, contagem do manifesto, timer de demonstração e slot honesto do motor.
+- `routeTree.gen.ts` registrado pelo gerador (sem edição manual): `id: '/praticar/$type'`.
+
+**F4.4.3 — Componentes**
+- `src/components/practice/`: `task-header`, `task-spec-card`, `timer-bar`, `engine-slot` (`data-practice-engine`), `use-practice-settings` (SSR-safe, status honesto), `spec-format`, `index`.
+
+**F4.4.4 — Relatório**
+- `.opencode/work/sub/fase-4/s5-pratica/report-s5-pratica.md` + decisões 1–10 no PRD e checkboxes do roadmap.
+
+## Gates
+- `bunx vitest run src/test/app/practice-timer.test.ts` → **49/49 verdes**
+- `bunx tsgo --noEmit` → **exit 0**
+- Extras: suíte completa **388/388** (26 arquivos) · eslint dos arquivos do pacote **exit 0**
+
+## Bloqueio registrado
+O preview `:8080` (iniciado 20:40) não recarregou o route tree regenerado às 20:47: `/praticar/wfd` e `/ajustes` respondem 404 — inclusive `/ajustes`, da onda irmã s4, confirmando que é o processo do preview, não as rotas. **Ação do agente principal: reiniciar o preview** e então validar as rotas novas via Playwright.
