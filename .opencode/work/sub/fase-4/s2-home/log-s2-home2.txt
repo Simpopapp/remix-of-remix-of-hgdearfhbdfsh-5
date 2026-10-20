@@ -2063,3 +2063,749 @@ nenhum
 79:      { property: "og:type", content: "website" },
 80:      { name: "twitter:card", content: "summary_large_image" },
 [0m
+[0m$ [0mcd /dev-server && ls -la .opencode/work/sub/fase-4/ .opencode/work/sub/fase-4/s2-home/ 2>&1; echo '--- sleep and retry tsgo ---'; sleep 90; timeout 600 bunx tsgo --noEmit 2>&1 | rg -o "^src/[^(]+" | sort -u; echo "TSGO_EXIT=${PIPESTATUS[0]}"
+.opencode/work/sub/fase-4/:
+total 28
+drwxr-xr-x 7 root root 4096 Oct 20 20:39 .
+drwxr-xr-x 6 root root 4096 Oct 20 20:39 ..
+drwxr-xr-x 2 root root 4096 Oct 20 20:39 s1-fundacao
+drwxr-xr-x 2 root root 4096 Oct 20 20:42 s2-home
+drwxr-xr-x 2 root root 4096 Oct 20 20:39 s3-catalogo
+drwxr-xr-x 2 root root 4096 Oct 20 20:42 s4-ajustes
+drwxr-xr-x 2 root root 4096 Oct 20 20:42 s5-pratica
+
+.opencode/work/sub/fase-4/s2-home/:
+total 368
+drwxr-xr-x 2 root root   4096 Oct 20 20:42 .
+drwxr-xr-x 7 root root   4096 Oct 20 20:39 ..
+-rw-r--r-- 1 root root  83439 Oct 20 20:47 log-s2-home2.txt
+-rw-r--r-- 1 root root 250263 Oct 20 20:39 log-s2-home.txt
+-rw-r--r-- 1 root root   3500 Oct 20 20:39 prd-project1-s2
+-rw-r--r-- 1 root root   1663 Oct 20 20:39 project1-s2
+-rw-r--r-- 1 root root    768 Oct 20 20:39 roadmap-proj1-s2
+-rw-r--r-- 1 root root      5 Oct 20 20:42 run-s2-home2.pid
+-rw-r--r-- 1 root root      6 Oct 20 20:39 run-s2-home.pid
+--- sleep and retry tsgo ---
+TSGO_EXIT=0
+[0m
+[0m$ [0mcd /dev-server && ls -l --time-style=+%H:%M:%S src/routeTree.gen.ts; rg -o "ajustes|praticar" src/routeTree.gen.ts | sort -u | head; echo '--- SSR fresh? ---'; curl -s --compressed --max-time 10 http://localhost:8080/ | tr -d '\000' | rg -o "data-tsd-source=\"/src/routes/index.tsx:[0-9]+" | sort -u | head -5
+-rw-r--r-- 1 root root 7141 20:47:24 src/routeTree.gen.ts
+ajustes
+praticar
+--- SSR fresh? ---
+data-tsd-source="/src/routes/index.tsx:191
+data-tsd-source="/src/routes/index.tsx:196
+data-tsd-source="/src/routes/index.tsx:204
+data-tsd-source="/src/routes/index.tsx:274
+data-tsd-source="/src/routes/index.tsx:275
+[0m
+[0m$ [0mcd /dev-server && timeout 600 bunx vitest run src/test/app/plano-do-dia.test.ts 2>&1 | tail -8; echo "VITEST_EXIT=${PIPESTATUS[0]}"
+RUN  v5.0.3 /dev-server
+
+
+ Test Files  1 passed (1)
+      Tests  24 passed (24)
+   Start at  20:48:50
+   Duration  834ms (environment 68%, transform 17%, setup 10%, import 3%, tests 1%, worker 1%)
+
+VITEST_EXIT=0
+[0m
+[0m$ [0mcd /dev-server && curl -s --compressed --max-time 10 http://localhost:8080/ | tr -d '\000' > /tmp/home3.html; rg -o "Olá|Bom dia|Boa tarde|Boa noite|ComingSoonChip|data-tsd-source=\"/src/routes/index.tsx:(19[0-9]|20[0-9])" /tmp/home3.html | sort | uniq -c; echo '--- chip count ---'; rg -o "Em breve" /tmp/home3.html | wc -l; rg -o ".{70}Em breve.{10}" /tmp/home3.html | head -3
+1 data-tsd-source="/src/routes/index.tsx:191
+      1 data-tsd-source="/src/routes/index.tsx:196
+      1 data-tsd-source="/src/routes/index.tsx:204
+      1 Olá
+--- chip count ---
+1
+ text-muted-foreground" data-tsd-source="/src/routes/index.tsx:204:5">Em breve</span></s
+[0m
+[0m$ [0mcd /dev-server && python3 - <<'PY'
+import re
+html = open('/tmp/home3.html', encoding='utf-8', errors='replace').read()
+for m in re.finditer('Em breve', html):
+    s = max(0, m.start()-900)
+    chunk = re.sub(r'<[^>]+>', ' ', html[s:m.end()+60])
+    chunk = re.sub(r'\s+', ' ', chunk)
+    print('...', chunk[-260:])
+    print('---')
+PY
+... src/routes/index.tsx:275:9"> Ajustes Em breve <span class="mt-0.5 block text-xs leading-rela
+---
+[0m
+[0m$ [0mcd /dev-server && rg -n "ajustes|praticar" -B 3 -A 3 src/routeTree.gen.ts | head -60
+10-
+11-import { Route as rootRouteImport } from './routes/__root'
+12-import { Route as IndexRouteImport } from './routes/index'
+13:import { Route as AjustesRouteImport } from './routes/ajustes'
+14-import { Route as CatalogoRouteImport } from './routes/catalogo'
+15-import { Route as DiagnosticoRouteImport } from './routes/diagnostico'
+16-import { Route as ProgressoRouteImport } from './routes/progresso'
+17-import { Route as SimuladoRouteImport } from './routes/simulado'
+18:import { Route as PraticarTypeRouteImport } from './routes/praticar.$type'
+19-import { Route as SessoesIndexRouteImport } from './routes/sessoes/index'
+20-import { Route as SessoesIdRouteImport } from './routes/sessoes/$id'
+21-
+--
+25-  getParentRoute: () => rootRouteImport,
+26-} as any)
+27-const AjustesRoute = AjustesRouteImport.update({
+28:  id: '/ajustes',
+29:  path: '/ajustes',
+30-  getParentRoute: () => rootRouteImport,
+31-} as any)
+32-const CatalogoRoute = CatalogoRouteImport.update({
+--
+50-  getParentRoute: () => rootRouteImport,
+51-} as any)
+52-const PraticarTypeRoute = PraticarTypeRouteImport.update({
+53:  id: '/praticar/$type',
+54:  path: '/praticar/$type',
+55-  getParentRoute: () => rootRouteImport,
+56-} as any)
+57-const SessoesIndexRoute = SessoesIndexRouteImport.update({
+--
+67-
+68-export interface FileRoutesByFullPath {
+69-  '/': typeof IndexRoute
+70:  '/ajustes': typeof AjustesRoute
+71-  '/catalogo': typeof CatalogoRoute
+72-  '/diagnostico': typeof DiagnosticoRoute
+73-  '/progresso': typeof ProgressoRoute
+74-  '/simulado': typeof SimuladoRoute
+75:  '/praticar/$type': typeof PraticarTypeRoute
+76-  '/sessoes/$id': typeof SessoesIdRoute
+77-  '/sessoes/': typeof SessoesIndexRoute
+78-}
+79-export interface FileRoutesByTo {
+80-  '/': typeof IndexRoute
+81:  '/ajustes': typeof AjustesRoute
+82-  '/catalogo': typeof CatalogoRoute
+83-  '/diagnostico': typeof DiagnosticoRoute
+84-  '/progresso': typeof ProgressoRoute
+85-  '/simulado': typeof SimuladoRoute
+86:  '/praticar/$type': typeof PraticarTypeRoute
+87-  '/sessoes/$id': typeof SessoesIdRoute
+88-  '/sessoes': typeof SessoesIndexRoute
+89-}
+90-export interface FileRoutesById {
+91-  __root__: typeof rootRouteImport
+92-  '/': typeof IndexRoute
+93:  '/ajustes': typeof AjustesRoute
+94-  '/catalogo': typeof CatalogoRoute
+95-  '/diagnostico': typeof DiagnosticoRoute
+[0m
+[0m⚙ [0mlovable-tools_browser--screenshot {"height":1250,"path":"/?v=3","width":390}
+[0m⚙ [0mlovable-tools_browser--screenshot {"height":1000,"path":"/?v=4","width":1280}
+[0m
+[0m$ [0mcd /dev-server && tail -20 .opencode/work/sub/fase-4/s2-home/prd-project1-s2; echo '=== roadmap ==='; cat .opencode/work/sub/fase-4/s2-home/roadmap-proj1-s2
+- **Sem números literais:** nada de "2.823", "22" — contagens vêm do manifesto/estado local.
+- Mobile-first: coluna única em 390 px, alvos ≥ 44 px, hierarquia com tokens (sem hardcoded colors).
+
+## F4.3 — Testes (`src/test/app/plano-do-dia.test.ts`)
+- Ordem estável e determinística (mesma entrada, mesma saída).
+- Regra 1: dueCount 5 → primeiro item revisão com "5"; dueCount null → sem item de revisão falso.
+- Regra 2: seção sem histórico → item explorar aponta a seção menos coberta (cobertura menor primeiro).
+- Regra 3: examDate null → convite para Ajustes.
+- Limite de 4 itens; nenhum item contém "estimativa"/"prontidão" (assert de honestidade).
+- Gates seus: `bunx vitest run src/test/app/plano-do-dia.test.ts` + `bunx tsgo --noEmit`.
+  NÃO rode build/dev; não edite routeTree.gen.ts.
+
+## Proibições
+- Não tocar em `src/routes/{catalogo,ajustes,sessoes,diagnostico,progresso,simulado}.tsx`,
+  `praticar/**`, `src/components/layout/**`, `src/lib/app/{settings,progress-client}.ts`,
+  `src/data/**`, `src/domain/**`, testes alheios, pilares centrais.
+- Sem novas dependências (agente principal instala).
+
+## Registro de decisões (preencha numerado)
+1. —
+=== roadmap ===
+# Roadmap do subagente s2-home (Fase 4 — onda 1)
+
+- [ ] F4.1.1 — `buildDayPlan` pura com as 5 regras do PRD + testes determinísticos
+      · Gates: vitest do arquivo verde · tsgo limpo
+- [ ] F4.1.2 — Home em `src/routes/index.tsx` (head() próprio; meta/data; plano do dia; atalhos;
+      estado local honesto; browser-only via getProgressLayer; esqueleto; sem números literais)
+      · Gates: tsgo limpo · revisão mobile 390 px no código (coluna única, alvos ≥ 44 px)
+- [ ] F4.1.3 — Verificação final: vitest + tsgo verdes; nenhuma métrica inventada
+- [ ] F4.1.4 — Relatório `report-s2-home.md` com evidências
+
+Gates finais do pacote: `bunx vitest run src/test/app/plano-do-dia.test.ts` · `bunx tsgo --noEmit` ·
+dono exclusivo respeitado.
+[0m
+[0m← [0mEdit .opencode/work/sub/fase-4/s2-home/prd-project1-s2
+Index: /dev-server/.opencode/work/sub/fase-4/s2-home/prd-project1-s2
+===================================================================
+--- /dev-server/.opencode/work/sub/fase-4/s2-home/prd-project1-s2
++++ /dev-server/.opencode/work/sub/fase-4/s2-home/prd-project1-s2
+@@ -53,5 +53,26 @@
+   `src/data/**`, `src/domain/**`, testes alheios, pilares centrais.
+ - Sem novas dependências (agente principal instala).
+ 
+ ## Registro de decisões (preencha numerado)
+-1. —
++1. **`SECTION_DISPLAY_NAMES` em vez de `SECTION_LABELS`** no `plano-do-dia.ts`. O `catalogo.ts`
++   (pacote s3) já exporta `SECTION_LABELS` com outra forma; manter dois símbolos de mesmo nome em
++   módulos vizinhos criaria ambiguidade no futuro barrel `src/lib/app/index.ts`. O plano fica
++   desacoplado do catálogo com o nome curto das seções. Descartado: importar do `catalogo.ts`
++   (acopla o plano a um arquivo de outro pacote, ainda em edição concorrente).
++2. **Data da prova no passado gera item de Ajustes.** A regra 3 do contrato só exigia o caso
++   `examDate === null`, mas um plano que ignora uma data vencida fingiria um prazo inexistente.
++   `todayKey` inválido NÃO autoriza afirmar que a data passou — nesse caso o item não entra.
++3. **Saudação por hora local só depois de montar.** SSR/dev renderizam "Olá" (texto neutro) e o
++   `useEffect` troca por "Bom dia/Boa tarde/Boa noite". Nunca `new Date()` no render: sem mismatch
++   de hidratação e sem `Math.random()`/hora em module scope.
++4. **Destino ausente é "Em breve", nunca link quebrado.** A Home resolve cada `href` com
++   `useResolvedPath`; rota ainda não entregue (onda paralela) vira card `aria-disabled` com selo
++   "Em breve" (teste garante que todo `href` do plano é destino real: `/sessoes`, `/catalogo`,
++   `/ajustes`).
++5. **Selo "Em breve" dentro da linha do título.** Na versão anterior o selo era irmão flex e
++   partia o texto da descrição no meio em 390 px (defeito visto em screenshot); agora vive na linha
++   do título, com quebra natural.
++6. **`lg:items-start` no grid da Home.** Sem isso o card do plano esticava vazio até a altura da
++   coluna lateral (defeito visual em desktop visto em screenshot).
++7. **Números só do manifesto/domínio.** `manifest.totals.questions`/`types` e `SECTIONS.length`;
++   nenhum literal de contagem no código (verificado por busca).
+
+[0m
+Now updating my PRD decision log and roadmap checkboxes with real evidence.
+[0m$ [0mcd /dev-server && python3 - <<'PY'
+from pathlib import Path
+p = Path('.opencode/work/sub/fase-4/s2-home/roadmap-proj1-s2')
+s = p.read_text()
+s = s.replace('- [ ] F4.1.1', '- [x] F4.1.1').replace('- [ ] F4.1.2', '- [x] F4.1.2').replace('- [ ] F4.1.3', '- [x] F4.1.3').replace('- [ ] F4.1.4', '- [x] F4.1.4')
+p.write_text(s)
+print(s)
+PY
+# Roadmap do subagente s2-home (Fase 4 — onda 1)
+
+- [x] F4.1.1 — `buildDayPlan` pura com as 5 regras do PRD + testes determinísticos
+      · Gates: vitest do arquivo verde · tsgo limpo
+- [x] F4.1.2 — Home em `src/routes/index.tsx` (head() próprio; meta/data; plano do dia; atalhos;
+      estado local honesto; browser-only via getProgressLayer; esqueleto; sem números literais)
+      · Gates: tsgo limpo · revisão mobile 390 px no código (coluna única, alvos ≥ 44 px)
+- [x] F4.1.3 — Verificação final: vitest + tsgo verdes; nenhuma métrica inventada
+- [x] F4.1.4 — Relatório `report-s2-home.md` com evidências
+
+Gates finais do pacote: `bunx vitest run src/test/app/plano-do-dia.test.ts` · `bunx tsgo --noEmit` ·
+dono exclusivo respeitado.
+[0m
+[0m$ [0mcd /dev-server && timeout 600 bunx tsgo --noEmit > /tmp/tsgo-final.txt 2>&1; echo "TSGO_EXIT=$?"; wc -l < /tmp/tsgo-final.txt
+TSGO_EXIT=0
+0
+[0m
+[0m$ [0mcd /dev-server && timeout 600 bunx vitest run src/test/app/plano-do-dia.test.ts 2>&1 | tail -10; echo "VITEST_EXIT=${PIPESTATUS[0]}"
+RUN  v5.0.3 /dev-server
+
+
+ Test Files  1 passed (1)
+      Tests  24 passed (24)
+   Start at  20:49:56
+   Duration  767ms (environment 70%, transform 15%, setup 10%, import 2%, tests 1%, worker 1%)
+
+VITEST_EXIT=0
+[0m
+[0m← [0mWrite .opencode/work/sub/fase-4/s2-home/report-s2-home.md
+Wrote file successfully.
+[0m
+## Objective
+- Verify the already-on-disk s2-home delivery (`src/routes/index.tsx`, `src/lib/app/plano-do-dia.ts`, `src/test/app/plano-do-dia.test.ts`) against the `prd-project1-s2` acceptance criteria (F4.1/F4.2), run the gates, fix small defects, and write `report-s2-home.md` with real evidence in `.opencode/work/sub/fase-4/s2-home/`.
+
+## Important Details
+- Baseline stated by user: 317 tests green, `tsgo` clean. Gates for this package are only `bunx vitest run src/test/app/plano-do-dia.test.ts` and `bunx tsgo --noEmit`; do NOT run `vite build`/`bun run dev` or restart the dev server.
+- F4.1 contract: pure `buildDayPlan`, max `DAY_PLAN_MAX_ITEMS = 4`, deterministic, rules = (1) `dueCount > 0` → review item `/sessoes` (`null` never fakes 0), (2) section with no attempts → "explorar" least-covered section, (3) `examDate` null → invite `/ajustes`, past date → warn, (4) never estimate/readiness/forecast, (5) stable order.
+- F4.2 Home: own `head()`, greeting + meta, real links via `InternalLink`/`useResolvedPath` (unregistered routes degrade to honest "Em breve"), browser-only progress via `getProgressLayer()` inside `useEffect`, skeleton + explained error state, no literal counts (uses `loadManifest()` totals), mobile-first single column with `min-h-11` targets, no hardcoded colors.
+- Domain facts: `SECTIONS = ["speaking","writing","reading","listening"]`; `LocalDayKey` effectively string so `diffLocalDays`/`compareLocalDayKeys` accept strings.
+- Dev-server caveat: vite (PID 927) had a stale SSR module cache after edits; `src/routeTree.gen.ts` regenerated at 20:47:24 so SSR now serves the new code. Route `Ajustes` still renders "Em breve" only because the running server's router instance predates `/ajustes`; resolves on main-agent restart — not a code defect.
+- Platform auto-commits: HEAD `ee715ee Changes` already contains the `index.tsx` / `plano-do-dia.ts` edits; test-file edits remain as ` M src/test/app/plano-do-dia.test.ts`.
+- Sibling packages s4-ajustes and s5-pratica landed concurrently (`src/routes/ajustes.tsx`, `src/routes/praticar/$type.tsx`) and transiently broke `tsgo`; mine were never in the error list.
+
+## Work State
+### Completed
+- Gate run 1 (pre-fix): vitest 22 passed, `tsgo` exit 0.
+- Acceptance review: rules 1–5 confirmed by code + tests; `head()` meta present (title/description/og/twitter, pt-BR); no literal `2823`/`22`; no `text-white|bg-black|bg-[#`; no `localStorage`/`process.env`; manifest totals used; `getProgressLayer` only in `useEffect`; `__root.tsx` supplies `AppShell` + nav + `ReviewBadge`.
+- Renamed `SECTION_LABELS` → `SECTION_DISPLAY_NAMES` in `src/lib/app/plano-do-dia.ts` (avoids collision with `catalogo.ts`'s `SECTION_LABELS`); updated import + footer usage in `index.tsx`.
+- Added hydration-safe greeting in `HomePage`: `useState("Olá")` + `useEffect` setting "Bom dia"/"Boa tarde"/"Boa noite"; eyebrow renders `{greeting} · PTE Academic · preparo diário`.
+- Added `lg:items-start` to the Home grid (stops left plan card stretching empty on desktop).
+- Added `ComingSoonChip` and restructured `PlanRow`/`ShortcutCard` so the "Em breve" chip sits in the title flex-wrap row instead of splitting the description text at 390 px.
+- Added 2 tests (`href` ∈ {`/sessoes`,`/catalogo`,`/ajustes`}; `SECTION_DISPLAY_NAMES` covers the 4 sections) and updated the test header comment → 22 → 24 tests.
+- Final gates: `bunx vitest run src/test/app/plano-do-dia.test.ts` → 24 passed, exit 0; `bunx tsgo --noEmit` → exit 0 (re-verified after siblings settled; earlier 8 errors were only `src/routes/ajustes.tsx` and `src/routes/praticar/$type.tsx`).
+- Visual evidence: screenshots at 390×1250 and 1280×1000 confirm greeting "BOA NOITE · PTE ACADEMIC · PREPARO DIÁRIO" and chips inline with titles; console errors: none.
+
+### Active
+- Report not yet written: `report-s2-home.md` still missing from `.opencode/work/sub/fase-4/s2-home/` (dir currently holds `prd-project1-s2`, `project1-s2`, `roadmap-proj1-s2`, `log-s2-home.txt`, `log-s2-home2.txt`, pid files).
+
+### Blocked
+- (none) — `tsgo` now clean; the lingering "Ajustes → Em breve" is a stale dev-server router instance, outside this package's scope.
+
+## Next Move
+1. Write `.opencode/work/sub/fase-4/s2-home/report-s2-home.md` with: acceptance checklist mapping (F4.1 rules 1–5, F4.2 blocks), exact gate outputs (`24 passed`, `TSGO_EXIT=0`), the four fixes applied (rename, greeting, `lg:items-start`, `ComingSoonChip`), screenshot evidence paths (`/tmp/browser/agent-1792529357427.png` 390px, `/tmp/browser/agent-1792529364317.png` 1280px), and the dev-server staleness caveat.
+2. Optionally re-run `bunx vitest run src/test/app/plano-do-dia.test.ts` and `bunx tsgo --noEmit` immediately before finalizing the report so the quoted evidence is the last state.
+
+## Relevant Files
+- `src/routes/index.tsx`: Home route — `HomePage` (greeting state/effect ~line 332, eyebrow ~420), `ComingSoonChip`, `PlanRow`, `ShortcutCard`, `InlineDestination`, `KIND_META`, `head()` meta.
+- `src/lib/app/plano-do-dia.ts`: pure day-plan logic — `DAY_PLAN_MAX_ITEMS`, `DAY_PLAN_MAX_ITEMS = 4`, `buildDayPlan`, `emptyPracticeBySection`, `leastPracticedSection`, `practiceBySectionFromSnapshots`, `totalPracticeAttempts`, `SECTION_DISPLAY_NAMES`, `DayPlanInput`.
+- `src/test/app/plano-do-dia.test.ts`: 24 tests (determinism, review rule, explore rule, meta rule, honesty, cap, href allowlist, section labels, snapshot aggregation).
+- `.opencode/work/sub/fase-4/s2-home/`: report destination; `prd-project1-s2` holds the acceptance criteria.
+- `src/lib/app/settings.ts`: `DEFAULT_SETTINGS`, `AppSettings`, `TARGET_SCORES`, `TIMER_SCALES` (meta/examDate source).
+- `src/lib/app/catalogo.ts`: owns its own `SECTION_LABELS` (reason for the rename); `practiceHref`.
+- `src/lib/app/progress-client.ts` / `src/lib/app/index.ts`: `getProgressLayer`, `isProgressAvailable`, `openProgressLayer`.
+- `src/components/layout/internal-link.tsx`, `use-resolved-path.ts`, `app-shell.tsx`, `nav-items.ts`: link resolution + shell/nav/badge.
+- `src/routeTree.gen.ts`: regenerated 20:47:24, now includes `/ajustes` and `/praticar/$type`.
+- `src/routes/__root.tsx`: wraps `Outlet` in `AppShell` + `QueryClientProvider` + `Toaster`.
+- `src/data/loader.ts`, `src/data/exam-spec.ts`: `loadManifest()` totals and `EXAM_META.skillScoreScale` (10–90).
+Continue if you have next steps, or stop and ask for clarification if you are unsure how to proceed.
+[0m$ [0mcd /dev-server && wc -l src/lib/app/plano-do-dia.ts src/test/app/plano-do-dia.test.ts src/routes/index.tsx && echo '--- literais de contagem ---' && rg -n "2823|2\.823|(?<![0-9])22(?![0-9])" src/routes/index.tsx src/lib/app/plano-do-dia.ts || echo 'nenhum' ; echo '--- cores hardcoded ---' && rg -n "text-white|bg-black|bg-\[#|text-\[#" src/routes/index.tsx src/lib/app/plano-do-dia.ts || echo 'nenhuma'; echo '--- storage/env direto ---' && rg -n "process\.env|localStorage|sessionStorage" src/routes/index.tsx src/lib/app/plano-do-dia.ts || echo 'nenhum'
+222 src/lib/app/plano-do-dia.ts
+  333 src/test/app/plano-do-dia.test.ts
+  705 src/routes/index.tsx
+ 1260 total
+--- literais de contagem ---
+rg: regex parse error:
+    (?:2823|2\.823|(?<![0-9])22(?![0-9]))
+                   ^^^^
+error: look-around, including look-ahead and look-behind, is not supported
+
+Consider enabling PCRE2 with the --pcre2 flag, which can handle backreferences
+and look-around.
+nenhum
+--- cores hardcoded ---
+nenhuma
+--- storage/env direto ---
+nenhum
+[0m
+[0m$ [0mcd /dev-server && echo '--- exports de src/lib/app/index.ts ---' && cat src/lib/app/index.ts; echo '--- routeTree tem /ajustes? ---' && rg -n "'/ajustes'" src/routeTree.gen.ts | head -3; echo '--- report existe? ---' && ls -la .opencode/work/sub/fase-4/s2-home/
+--- exports de src/lib/app/index.ts ---
+/**
+ * Ponto de entrada da camada de progresso local (Fase 3).
+ *
+ * Uso típico (Fase 4+):
+ * ```ts
+ * const progress = await openProgressLayer();
+ * await progress.store.submitAttempt(attempt, { questionType: "wfd" });
+ * const json = await progress.backup.exportJson();
+ * ```
+ *
+ * Tudo aqui é local e determinístico: nenhuma chamada de rede, nenhuma IA.
+ * A única dependência de plataforma é IndexedDB (injetável via `fake-indexeddb`
+ * nos testes).
+ */
+
+import { openProgressDb, type ProgressDatabase, type ProgressDbOpenOptions } from "./db";
+import { BackupIo, type BackupIoOptions } from "./backup-io";
+import { MediaStore, type MediaStoreOptions } from "./media";
+import {
+  ProgressStore,
+  type ProgressStoreOptions,
+  type SkillWeightResolver,
+  type TruncationPolicy,
+} from "./storage";
+
+export * from "./db";
+export * from "./srs";
+export * from "./storage";
+export * from "./backup-io";
+export * from "./media";
+
+export interface ProgressLayer {
+  db: ProgressDatabase;
+  store: ProgressStore;
+  backup: BackupIo;
+  media: MediaStore;
+  close: () => void;
+}
+
+export interface OpenProgressLayerOptions {
+  dbName?: string;
+  /** fábrica injetável (testes) — `null` força indisponibilidade */
+  indexedDB?: IDBFactory | null;
+  now?: () => Date;
+  truncation?: Partial<TruncationPolicy>;
+  skillWeights?: SkillWeightResolver;
+  autoTruncate?: boolean;
+  device?: string;
+  exportAttemptLimit?: number;
+  quotaEstimator?: MediaStoreOptions["quotaEstimator"];
+}
+
+/**
+ * Abre o banco e monta os serviços com a MESMA conexão (transações atômicas
+ * entre snapshot, log, agregados, backup e mídia).
+ */
+export async function openProgressLayer(
+  options: OpenProgressLayerOptions = {},
+): Promise<ProgressLayer> {
+  const dbOptions: ProgressDbOpenOptions = {
+    ...(options.dbName === undefined ? {} : { name: options.dbName }),
+    ...(options.indexedDB === undefined ? {} : { indexedDB: options.indexedDB }),
+  };
+  const db = await openProgressDb(dbOptions);
+  const common = {
+    db,
+    ...(options.now === undefined ? {} : { now: options.now }),
+  };
+  const store = new ProgressStore({
+    ...common,
+    ...(options.truncation === undefined ? {} : { truncation: options.truncation }),
+    ...(options.skillWeights === undefined ? {} : { skillWeights: options.skillWeights }),
+    ...(options.autoTruncate === undefined ? {} : { autoTruncate: options.autoTruncate }),
+  } satisfies ProgressStoreOptions);
+  const backupOptions: BackupIoOptions = {
+    store,
+    ...(options.now === undefined ? {} : { now: options.now }),
+    ...(options.device === undefined ? {} : { device: options.device }),
+    ...(options.exportAttemptLimit === undefined
+      ? {}
+      : { exportAttemptLimit: options.exportAttemptLimit }),
+  };
+  const backup = new BackupIo(backupOptions);
+  const mediaOptions: MediaStoreOptions = {
+    db,
+    ...(options.now === undefined ? {} : { now: options.now }),
+    ...(options.quotaEstimator === undefined ? {} : { quotaEstimator: options.quotaEstimator }),
+  };
+  const media = new MediaStore(mediaOptions);
+
+  return {
+    db,
+    store,
+    backup,
+    media,
+    close: () => {
+      db.close();
+    },
+  };
+}
+--- routeTree tem /ajustes? ---
+28:  id: '/ajustes',
+29:  path: '/ajustes',
+70:  '/ajustes': typeof AjustesRoute
+--- report existe? ---
+total 404
+drwxr-xr-x 2 root root   4096 Oct 20 20:50 .
+drwxr-xr-x 7 root root   4096 Oct 20 20:39 ..
+-rw-r--r-- 1 root root 103308 Oct 20 20:50 log-s2-home2.txt
+-rw-r--r-- 1 root root 250263 Oct 20 20:39 log-s2-home.txt
+-rw-r--r-- 1 root root   5375 Oct 20 20:49 prd-project1-s2
+-rw-r--r-- 1 root root   1663 Oct 20 20:39 project1-s2
+-rw-r--r-- 1 root root   9011 Oct 20 20:50 report-s2-home.md
+-rw-r--r-- 1 root root    768 Oct 20 20:49 roadmap-proj1-s2
+-rw-r--r-- 1 root root      5 Oct 20 20:42 run-s2-home2.pid
+-rw-r--r-- 1 root root      6 Oct 20 20:39 run-s2-home.pid
+[0m
+[0m$ [0mcd /dev-server && echo '--- 2823 ---'; rg -n --pcre2 "2823|2\.823" src/routes/index.tsx src/lib/app/plano-do-dia.ts; echo "exit=$?"; echo '--- 22 isolado ---'; rg -n --pcre2 "(?<![0-9.,])22(?![0-9.,])" src/routes/index.tsx src/lib/app/plano-do-dia.ts; echo "exit=$?"; echo '--- onde a Home pega progresso ---'; rg -n "getProgressLayer|progress-client|@/lib/app" src/routes/index.tsx | head; echo '--- ajustes.tsx imports ---'; rg -n "getProgressLayer|isProgressAvailable|@/lib/app" src/routes/ajustes.tsx | head
+--- 2823 ---
+exit=1
+--- 22 isolado ---
+exit=1
+--- onde a Home pega progresso ---
+10: * - progresso local lido de `getProgressLayer()` DENTRO de `useEffect` — em SSR
+57:} from "@/lib/app/plano-do-dia";
+58:import { getProgressLayer, isProgressAvailable } from "@/lib/app/progress-client";
+59:import { readAppSettings, type AppSettings } from "@/lib/app/settings";
+60:import { reviewQueue } from "@/lib/app/srs";
+359:        const layer = await getProgressLayer();
+--- ajustes.tsx imports ---
+9: * - a página só consome `@/lib/app`, `@/lib/speech` e `@/domain` — nenhum
+29:import type { ProgressLayer } from "@/lib/app";
+30:import { getProgressLayer, isProgressAvailable } from "@/lib/app/progress-client";
+31:import type { QuotaEstimate } from "@/lib/app/media";
+37:} from "@/lib/app/settings";
+85:    if (!isProgressAvailable()) {
+91:        const opened = await getProgressLayer();
+[0m
+[0m⚙ [0mlovable-tools_browser--screenshot {"path":"/","width":1280,"height":1000}
+[0m
+[0m← [0mEdit .opencode/work/sub/fase-4/s2-home/report-s2-home.md
+Index: /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+===================================================================
+--- /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
++++ /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+@@ -4,9 +4,9 @@
+ 
+ ## 1. Feito (por fase do meu roadmap)
+ 
+ ### F4.1.1 — `buildDayPlan` pura + testes (ok)
+-- `src/lib/app/plano-do-dia.ts` (215→223 linhas):
++- `src/lib/app/plano-do-dia.ts` (222 linhas):
+   - contrato exato do PRD: `DayPlanInput { settings, dueCount, practiceBySection, todayKey }`,
+     `DayPlanItem { kind: "review"|"practice"|"explore", title, description, href }`,
+     `buildDayPlan()` **pura** (zero I/O, zero relógio, zero aleatoriedade).
+   - Regra 1: `dueCount > 0` → primeiro item "Revisar N …" → `/sessoes`; `null` desconhecido **nunca**
+
+[0m
+[0m← [0mEdit .opencode/work/sub/fase-4/s2-home/report-s2-home.md
+Index: /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+===================================================================
+--- /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
++++ /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+@@ -19,9 +19,9 @@
+   - Regra 5: `DAY_PLAN_MAX_ITEMS = 4`, ordem estável (mesma entrada ⇒ mesma saída).
+   - Auxiliares puros e testados: `practiceBySectionFromSnapshots` (agrega tentativas do snapshot,
+     fonte independente do log truncável; valores corrompidos → 0), `totalPracticeAttempts`,
+     `leastPracticedSection`, `emptyPracticeBySection`, `SECTION_DISPLAY_NAMES`.
+-- `src/test/app/plano-do-dia.test.ts` (299→343 linhas): **24 testes** (antes 22; +2 nesta execução:
++- `src/test/app/plano-do-dia.test.ts` (333 linhas): **24 testes** (antes 22; +2 nesta execução:
+   "só aponta para destinos reais do produto" e "nomeia as quatro seções do exame").
+ 
+ ### F4.1.2 — Home (`src/routes/index.tsx`, ok)
+ - `head()` próprio pt-BR: title único ("PTE Master Hub — Seu plano de estudo de hoje"),
+
+[0m
+Estado atual confirmado no preview: saudação correta, chips inline, `/ajustes` já resolve (o cache do router se atualizou sozinho), badge "Em dia" presente. Vou corrigir três imprecisões do relatório (contagens de linha, pendência do restart e do import do s4) com base nessa verificação.
+[0m$ [0mcd /dev-server && sed -n '/## 5. Mudanças/,/## 6./p' .opencode/work/sub/fase-4/s2-home/report-s2-home.md
+## 5. Mudanças necessárias fora do meu recorte (para o agente principal)
+
+1. **Reiniciar o dev server** antes do gate Playwright da Fase 4, para o router SSR recarregar o
+   `routeTree.gen.ts` (hoje `src/routes/ajustes.tsx` e `src/routes/praticar/$type.tsx` existem e
+   estão no tree, mas o processo em :8080 ainda os trata como ausentes — o badge "Em breve" da Home
+   e do menu desaparece com o restart; é o comportamento correto do `useResolvedPath`).
+2. **Verificar `getProgressLayer`/`isProgressAvailable` reexportados em `@/lib/app`** (s1/s4): os
+   arquivos estão em `src/lib/app/progress-client.ts` e o `index.ts` de `@/lib/app` não os
+   reexporta — a Home importa direto do módulo, mas `src/routes/ajustes.tsx` (s4) importa de
+   `@/lib/app` e gerou erro de tipos durante a janela concorrente. Se o s4 não corrigir, o tsgo
+   global quebra.
+3. **Build/lint/Playwright** são do agente principal (não rodei `vite build`, `bun run dev` nem
+   `eslint` por regra do pacote).
+4. `src/routeTree.gen.ts` não foi editado por mim (regenerado pelo plugin ao surgirem as rotas dos
+   irmãos, como esperado).
+
+## 6. Arquivos criados/alterados
+[0m
+[0m← [0mEdit .opencode/work/sub/fase-4/s2-home/report-s2-home.md
+Index: /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+===================================================================
+--- /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
++++ /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+@@ -112,19 +112,18 @@
+   do título).
+ 
+ ## 5. Mudanças necessárias fora do meu recorte (para o agente principal)
+ 
+-1. **Reiniciar o dev server** antes do gate Playwright da Fase 4, para o router SSR recarregar o
+-   `routeTree.gen.ts` (hoje `src/routes/ajustes.tsx` e `src/routes/praticar/$type.tsx` existem e
+-   estão no tree, mas o processo em :8080 ainda os trata como ausentes — o badge "Em breve" da Home
+-   e do menu desaparece com o restart; é o comportamento correto do `useResolvedPath`).
+-2. **Verificar `getProgressLayer`/`isProgressAvailable` reexportados em `@/lib/app`** (s1/s4): os
+-   arquivos estão em `src/lib/app/progress-client.ts` e o `index.ts` de `@/lib/app` não os
+-   reexporta — a Home importa direto do módulo, mas `src/routes/ajustes.tsx` (s4) importa de
+-   `@/lib/app` e gerou erro de tipos durante a janela concorrente. Se o s4 não corrigir, o tsgo
+-   global quebra.
+-3. **Build/lint/Playwright** são do agente principal (não rodei `vite build`, `bun run dev` nem
+-   `eslint` por regra do pacote).
++1. **Nada bloqueante.** O cache do router SSR que exibia "Em breve" em `/ajustes` durante a janela
++   concorrente **já se resolveu sozinho**: nova captura em :8080 (20:50) mostra o atalho "Ajustes"
++   ativo, sem selo "Em breve", e o badge global "Em dia" — nenhum restart é necessário.
++2. **Verificado, sem ação:** `src/routes/ajustes.tsx` (s4) passou a importar
++   `getProgressLayer`/`isProgressAvailable` de `@/lib/app/progress-client` (e só o *tipo*
++   `ProgressLayer` de `@/lib/app`); `@/lib/app/index.ts` **não** reexporta `progress-client` por
++   desenho (é módulo browser-only). O erro de tipos da janela concorrente está resolvido — `tsgo`
++   global em exit 0.
++3. **Build/lint/Playwright globais** são do agente principal (não rodei `vite build`, `bun run dev`
++   nem `eslint` por regra do pacote).
+ 4. `src/routeTree.gen.ts` não foi editado por mim (regenerado pelo plugin ao surgirem as rotas dos
+    irmãos, como esperado).
+ 
+ ## 6. Arquivos criados/alterados
+
+[0m
+[0m$ [0mcd /dev-server && sed -n '/### F4.1.3/,/## 3./p' .opencode/work/sub/fase-4/s2-home/report-s2-home.md; echo '====='; sed -n '/## 4. Pendências/,/## 5./p' .opencode/work/sub/fase-4/s2-home/report-s2-home.md
+### F4.1.3 — Verificação final (ok)
+- Gates do pacote verdes (ver §2). Nenhuma métrica inventada: Home só mostra fila SRS real,
+  tentativas reais dos snapshots e contagens do manifesto; estimativa por habilidade aparece
+  explicitamente como "ainda não disponível" (Fase 8).
+
+### F4.1.4 — Relatório (este arquivo)
+
+## 2. Evidências (saída real dos gates)
+
+```
+$ bunx vitest run src/test/app/plano-do-dia.test.ts
+ RUN  v5.0.3 /dev-server
+ Test Files  1 passed (1)
+      Tests  24 passed (24)
+   Duration  767ms
+VITEST_EXIT=0
+```
+
+```
+$ bunx tsgo --noEmit
+TSGO_EXIT=0        # saída vazia (0 linhas) — projeto inteiro limpo
+```
+
+Verificações auxiliares (grep, sem build/dev):
+- `2823|2\.823|\b22\b` em `routes/index.tsx` e `plano-do-dia.ts` → **nenhum** literal de contagem.
+- `text-white|bg-black|bg-[#|text-[#` → **nenhuma** cor hardcoded.
+- `process.env|localStorage|sessionStorage` nos meus arquivos → **nenhum** acesso direto fora da
+  camada de progresso.
+- `git status` → nenhuma alteração em `src/routeTree.gen.ts`.
+
+Verificação visual (preview :8080, ferramenta de screenshot, console sem erros):
+- 1280×1000: `/?v=4` → greeting "BOA NOITE · PTE ACADEMIC · PREPARO DIÁRIO", cards com chips na
+  linha do título, card do plano sem esticamento, `2823 questões em 22 tipos` vindo do manifesto.
+- 390×1250: `/?v=3` → coluna única, sem overflow, "EM BREVE" na linha do título (não no meio da
+  descrição), alvos de toque ≥ 44 px.
+- Console do browser: apenas `[vite] connecting/connected` + aviso padrão do React DevTools —
+  **zero erros**.
+
+## 3. Decisões tomadas (registradas no meu PRD, §"Registro de decisões")
+=====
+## 4. Pendências e bloqueios
+
+Nenhum bloqueio da entrega. Observação de ambiente (não é código):
+- Durante a execução, `bunx tsgo --noEmit` falhou por ~1 min com **8 erros exclusivamente em arquivos
+  de pacotes irmãos em edição concorrente** (`src/routes/ajustes.tsx` — s4; `src/routes/praticar/$type.tsx`
+  — s5), porque `routeTree.gen.ts` ainda não tinha regenerado e `getProgressLayer/isProgressAvailable`
+  ainda não eram reexportados. Nenhum erro nos meus arquivos. Depois que os irmãos estabilizaram,
+  o gate voltou a `TSGO_EXIT=0` (evidência acima).
+- O dev server em :8080 manteve por alguns minutos módulos SSR em cache (linhas `data-tsd-source`
+  apontando para a versão anterior do `index.tsx`) e o **router instance** do SSR ainda resolve
+  `/ajustes` como ausente (a Home mostra "Em breve" nesse atalho) mesmo com
+  `src/routeTree.gen.ts` já contendo `'/ajustes'` (regenerado 20:47). É cache do processo, não do
+  código: os mesmos dados servidos após invalidarem mostram a versão nova ("Olá" e o chip na linha
+  do título).
+
+## 5. Mudanças necessárias fora do meu recorte (para o agente principal)
+[0m
+[0m← [0mEdit .opencode/work/sub/fase-4/s2-home/report-s2-home.md
+Index: /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+===================================================================
+--- /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
++++ /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+@@ -74,12 +74,15 @@
+   camada de progresso.
+ - `git status` → nenhuma alteração em `src/routeTree.gen.ts`.
+ 
+ Verificação visual (preview :8080, ferramenta de screenshot, console sem erros):
+-- 1280×1000: `/?v=4` → greeting "BOA NOITE · PTE ACADEMIC · PREPARO DIÁRIO", cards com chips na
+-  linha do título, card do plano sem esticamento, `2823 questões em 22 tipos` vindo do manifesto.
+-- 390×1250: `/?v=3` → coluna única, sem overflow, "EM BREVE" na linha do título (não no meio da
+-  descrição), alvos de toque ≥ 44 px.
++- 1280×1000 (captura final, `/tmp/browser/agent-1792529441997.png`): título da página
++  "PTE Master Hub — Seu plano de estudo de hoje", greeting "BOA NOITE · PTE ACADEMIC · PREPARO
++  DIÁRIO", chips "EXPLORAR/PRÁTICA" na linha do título, card do plano sem esticamento,
++  "2823 questões em 22 tipos" vindo do manifesto, atalho e item de menu "Ajustes" já resolvidos
++  (sem "Em breve"), badge global "Em dia".
++- 390×1250: coluna única, sem overflow, "EM BREVE" na linha do título (não no meio da descrição),
++  alvos de toque ≥ 44 px.
+ - Console do browser: apenas `[vite] connecting/connected` + aviso padrão do React DevTools —
+   **zero erros**.
+ 
+ ## 3. Decisões tomadas (registradas no meu PRD, §"Registro de decisões")
+
+[0m
+[0m← [0mEdit .opencode/work/sub/fase-4/s2-home/report-s2-home.md
+Index: /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+===================================================================
+--- /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
++++ /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+@@ -107,13 +107,12 @@
+   — s5), porque `routeTree.gen.ts` ainda não tinha regenerado e `getProgressLayer/isProgressAvailable`
+   ainda não eram reexportados. Nenhum erro nos meus arquivos. Depois que os irmãos estabilizaram,
+   o gate voltou a `TSGO_EXIT=0` (evidência acima).
+ - O dev server em :8080 manteve por alguns minutos módulos SSR em cache (linhas `data-tsd-source`
+-  apontando para a versão anterior do `index.tsx`) e o **router instance** do SSR ainda resolve
+-  `/ajustes` como ausente (a Home mostra "Em breve" nesse atalho) mesmo com
+-  `src/routeTree.gen.ts` já contendo `'/ajustes'` (regenerado 20:47). É cache do processo, não do
+-  código: os mesmos dados servidos após invalidarem mostram a versão nova ("Olá" e o chip na linha
+-  do título).
++  apontando para a versão anterior do `index.tsx`) e o **router instance** do SSR chegou a resolver
++  `/ajustes` como ausente (a Home mostrava "Em breve" nesse atalho). É cache do processo, não do
++  código: sem nenhuma intervenção, a captura final (20:50) já mostra `/ajustes` resolvido e
++  `src/routeTree.gen.ts` contém `'/ajustes'` desde 20:47.
+ 
+ ## 5. Mudanças necessárias fora do meu recorte (para o agente principal)
+ 
+ 1. **Nada bloqueante.** O cache do router SSR que exibia "Em breve" em `/ajustes` durante a janela
+
+[0m
+[0m← [0mEdit .opencode/work/sub/fase-4/s2-home/report-s2-home.md
+Index: /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+===================================================================
+--- /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
++++ /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+@@ -67,9 +67,10 @@
+ TSGO_EXIT=0        # saída vazia (0 linhas) — projeto inteiro limpo
+ ```
+ 
+ Verificações auxiliares (grep, sem build/dev):
+-- `2823|2\.823|\b22\b` em `routes/index.tsx` e `plano-do-dia.ts` → **nenhum** literal de contagem.
++- `rg -n --pcre2 "2823|2\.823"` e `rg -n --pcre2 "(?<![0-9.,])22(?![0-9.,])"` em `routes/index.tsx` e
++  `plano-do-dia.ts` → exit 1 (nenhuma ocorrência): **nenhum** literal de contagem.
+ - `text-white|bg-black|bg-[#|text-[#` → **nenhuma** cor hardcoded.
+ - `process.env|localStorage|sessionStorage` nos meus arquivos → **nenhum** acesso direto fora da
+   camada de progresso.
+ - `git status` → nenhuma alteração em `src/routeTree.gen.ts`.
+
+[0m
+[0m$ [0mcd /dev-server && "$__LOVABLE_REAL_GIT" status --short src/routeTree.gen.ts src/routes/index.tsx src/lib/app/plano-do-dia.ts src/test/app/plano-do-dia.test.ts; echo "---HEAD---"; "$__LOVABLE_REAL_GIT" log --oneline -2
+M src/routeTree.gen.ts
+---HEAD---
+ca2e3cd Changes
+ee715ee Changes
+[0m
+[0m$ [0mcd /dev-server && "$__LOVABLE_REAL_GIT" diff --stat src/routeTree.gen.ts && "$__LOVABLE_REAL_GIT" diff src/routeTree.gen.ts | head -40
+src/routeTree.gen.ts | 42 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+diff --git a/src/routeTree.gen.ts b/src/routeTree.gen.ts
+index 54dbacd..57c517a 100644
+--- a/src/routeTree.gen.ts
++++ b/src/routeTree.gen.ts
+@@ -10,10 +10,12 @@
+ 
+ import { Route as rootRouteImport } from './routes/__root'
+ import { Route as IndexRouteImport } from './routes/index'
++import { Route as AjustesRouteImport } from './routes/ajustes'
+ import { Route as CatalogoRouteImport } from './routes/catalogo'
+ import { Route as DiagnosticoRouteImport } from './routes/diagnostico'
+ import { Route as ProgressoRouteImport } from './routes/progresso'
+ import { Route as SimuladoRouteImport } from './routes/simulado'
++import { Route as PraticarTypeRouteImport } from './routes/praticar.$type'
+ import { Route as SessoesIndexRouteImport } from './routes/sessoes/index'
+ import { Route as SessoesIdRouteImport } from './routes/sessoes/$id'
+ 
+@@ -22,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
+   path: '/',
+   getParentRoute: () => rootRouteImport,
+ } as any)
++const AjustesRoute = AjustesRouteImport.update({
++  id: '/ajustes',
++  path: '/ajustes',
++  getParentRoute: () => rootRouteImport,
++} as any)
+ const CatalogoRoute = CatalogoRouteImport.update({
+   id: '/catalogo',
+   path: '/catalogo',
+@@ -42,6 +49,11 @@ const SimuladoRoute = SimuladoRouteImport.update({
+   path: '/simulado',
+   getParentRoute: () => rootRouteImport,
+ } as any)
++const PraticarTypeRoute = PraticarTypeRouteImport.update({
++  id: '/praticar/$type',
++  path: '/praticar/$type',
++  getParentRoute: () => rootRouteImport,
++} as any)
+ const SessoesIndexRoute = SessoesIndexRouteImport.update({
+   id: '/sessoes/',
+[0m
+[0m← [0mEdit .opencode/work/sub/fase-4/s2-home/report-s2-home.md
+Index: /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+===================================================================
+--- /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
++++ /dev-server/.opencode/work/sub/fase-4/s2-home/report-s2-home.md
+@@ -72,9 +72,11 @@
+   `plano-do-dia.ts` → exit 1 (nenhuma ocorrência): **nenhum** literal de contagem.
+ - `text-white|bg-black|bg-[#|text-[#` → **nenhuma** cor hardcoded.
+ - `process.env|localStorage|sessionStorage` nos meus arquivos → **nenhum** acesso direto fora da
+   camada de progresso.
+-- `git status` → nenhuma alteração em `src/routeTree.gen.ts`.
++- `git status` → `src/routeTree.gen.ts` aparece modificado **somente por regeneração automática**
++  (diff = +42 linhas, só as rotas dos irmãos `/ajustes` e `/praticar/$type`); nenhuma edição manual
++  minha.
+ 
+ Verificação visual (preview :8080, ferramenta de screenshot, console sem erros):
+ - 1280×1000 (captura final, `/tmp/browser/agent-1792529441997.png`): título da página
+   "PTE Master Hub — Seu plano de estudo de hoje", greeting "BOA NOITE · PTE ACADEMIC · PREPARO
+
+[0m
+[0m→ [0mRead .opencode/work/sub/fase-4/s2-home/report-s2-home.md
+[0m⚙ [0mlovable-tools_browser--screenshot {"height":1250,"path":"/","width":390}

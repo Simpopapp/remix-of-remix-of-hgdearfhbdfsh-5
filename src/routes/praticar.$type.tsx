@@ -30,6 +30,7 @@ import {
 } from "@/components/practice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { loadManifest } from "@/data/loader";
+import { isTaskType } from "@/domain";
 import { SECTION_LABELS, deriveCatalog } from "@/lib/app/catalogo";
 import { examTaskSpecFor, timerForType } from "@/lib/app/practice-timer";
 
@@ -81,10 +82,12 @@ function PraticaPage() {
   const spec = examTaskSpecFor(type);
 
   const practiceSettings = usePracticeSettings();
-  const timerSpec = useMemo(
-    () => (spec === null ? null : timerForType(spec.id, spec, practiceSettings.settings.practice)),
-    [spec, practiceSettings.settings.practice],
-  );
+  const timerSpec = useMemo(() => {
+    // `exam-spec` tipa o id como string (o catálogo do banco é a autoridade). O guard
+    // fecha a fronteira antes de entregar o tipo ao contrato da Fase 6.
+    if (spec === null || !isTaskType(spec.id)) return null;
+    return timerForType(spec.id, spec, practiceSettings.settings.practice);
+  }, [spec, practiceSettings.settings.practice]);
 
   // `beforeLoad` já garantiu o spec; a entrada do catálogo cobre os 22 tipos do contrato.
   // A guarda existe para que uma futura inconsistência falhe como 404, não como tela vazia.

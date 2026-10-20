@@ -54,4 +54,25 @@ Regras determinísticas:
 - Sem novas dependências (agente principal instala).
 
 ## Registro de decisões (preencha numerado)
-1. —
+1. **`SECTION_DISPLAY_NAMES` em vez de `SECTION_LABELS`** no `plano-do-dia.ts`. O `catalogo.ts`
+   (pacote s3) já exporta `SECTION_LABELS` com outra forma; manter dois símbolos de mesmo nome em
+   módulos vizinhos criaria ambiguidade no futuro barrel `src/lib/app/index.ts`. O plano fica
+   desacoplado do catálogo com o nome curto das seções. Descartado: importar do `catalogo.ts`
+   (acopla o plano a um arquivo de outro pacote, ainda em edição concorrente).
+2. **Data da prova no passado gera item de Ajustes.** A regra 3 do contrato só exigia o caso
+   `examDate === null`, mas um plano que ignora uma data vencida fingiria um prazo inexistente.
+   `todayKey` inválido NÃO autoriza afirmar que a data passou — nesse caso o item não entra.
+3. **Saudação por hora local só depois de montar.** SSR/dev renderizam "Olá" (texto neutro) e o
+   `useEffect` troca por "Bom dia/Boa tarde/Boa noite". Nunca `new Date()` no render: sem mismatch
+   de hidratação e sem `Math.random()`/hora em module scope.
+4. **Destino ausente é "Em breve", nunca link quebrado.** A Home resolve cada `href` com
+   `useResolvedPath`; rota ainda não entregue (onda paralela) vira card `aria-disabled` com selo
+   "Em breve" (teste garante que todo `href` do plano é destino real: `/sessoes`, `/catalogo`,
+   `/ajustes`).
+5. **Selo "Em breve" dentro da linha do título.** Na versão anterior o selo era irmão flex e
+   partia o texto da descrição no meio em 390 px (defeito visto em screenshot); agora vive na linha
+   do título, com quebra natural.
+6. **`lg:items-start` no grid da Home.** Sem isso o card do plano esticava vazio até a altura da
+   coluna lateral (defeito visual em desktop visto em screenshot).
+7. **Números só do manifesto/domínio.** `manifest.totals.questions`/`types` e `SECTIONS.length`;
+   nenhum literal de contagem no código (verificado por busca).

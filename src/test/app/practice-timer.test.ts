@@ -16,6 +16,8 @@
  * 6. A máquina de estados é determinística: preparação → resposta → fim, pausa não
  *    perde tempo, reiniciar volta ao começo e tipo sem contagem fica `unavailable`.
  * 7. A formatação pt-BR é estável e legível.
+ * 8. O contrato da rota `/praticar/$type`: `head()` por tipo e 404 para slug inventado
+ *    (`beforeLoad`), sem depender de servidor de preview.
  *
  * Nenhum número do banco de questões é usado: aqui só existem tempos do formato oficial.
  */
@@ -23,6 +25,7 @@
 import { describe, expect, it } from "vitest";
 
 import { EXAM_TASKS } from "@/data/exam-spec";
+import { Route } from "@/routes/praticar.$type";
 import { SECTION_BY_TYPE, TASK_TYPES, type TaskType } from "@/domain";
 import type { AppSettings } from "@/lib/app/settings";
 import {
@@ -137,9 +140,9 @@ describe("timerForType — formatos reais do exame", () => {
   });
 
   it("rejeita spec de outro tipo (não exibe o tempo errado)", () => {
-    expect(() =>
-      timerForType("wfd", findExamTaskSpec("read_aloud"), BASE_PRACTICE),
-    ).toThrow(/não corresponde/);
+    expect(() => timerForType("wfd", findExamTaskSpec("read_aloud"), BASE_PRACTICE)).toThrow(
+      /não corresponde/,
+    );
   });
 });
 
@@ -273,7 +276,9 @@ describe("máquina de estados do cronômetro", () => {
     // Já entrou na resposta: progresso da resposta recomeça em 0.
     expect(state.phase).toBe("response");
     expect(timerProgress(state, describeImage)).toBe(0);
-    expect(timerProgress({ phase: "finished", remainingMs: 0, running: false }, describeImage)).toBe(1);
+    expect(
+      timerProgress({ phase: "finished", remainingMs: 0, running: false }, describeImage),
+    ).toBe(1);
   });
 });
 
@@ -296,5 +301,43 @@ describe("formatação de duração", () => {
     expect(formatCountdown(900)).toBe("1 s");
     expect(formatCountdown(0)).toBe("0 s");
     expect(formatCountdown(-10)).toBe("0 s");
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/* Contrato da rota /praticar/$type                                   */
+/* ------------------------------------------------------------------ */
+
+type RouteHead = (arg: { params: { type: string } }) => {
+  meta: Array<Record<string, string>>;
+};
+type RouteBeforeLoad = (arg: { params: { type: string } }) => unknown;
+
+const routeHead = Route.options.head as unknown as RouteHead;
+const routeBeforeLoad = Route.options.beforeLoad as unknown as RouteBeforeLoad;
+
+describe("rota /praticar/$type — head e validação do parâmetro", () => {
+  it("head válido descreve o tipo e a seção, sem noindex", () => {
+    const result = routeHead({ params: { type: "wfd" } });
+    const title = result.meta.find((meta) => "title" in meta)?.["title"];
+    const description =
+      result.meta.find((meta) => meta["name"] === "description")?.["content"] ?? "";
+
+    expect(title).toContain(findExamTaskSpec("wfd").namePt);
+    expect(description).toContain("Listening");
+    expect(result.meta.some((meta) => meta["name"] === "robots")).toBe(false);
+  });
+
+  it("head de tipo inventado é noindex (não anuncia página que não existe)", () => {
+    const result = routeHead({ params: { type: "nao_existe" } });
+    expect(result.meta.find((meta) => meta["name"] === "robots")?.["content"]).toBe("noindex");
+  });
+
+  it("beforeLoad aceita os 22 tipos e rejeita slug inventado ou vazio", () => {
+    for (const type of TASK_TYPES) {
+      expect(() => routeBeforeLoad({ params: { type } })).not.toThrow();
+    }
+    expect(() => routeBeforeLoad({ params: { type: "nao_existe" } })).toThrow();
+    expect(() => routeBeforeLoad({ params: { type: "" } })).toThrow();
   });
 });

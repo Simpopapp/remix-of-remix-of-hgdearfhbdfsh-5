@@ -8,7 +8,12 @@
  */
 
 import type { QuarantineReason } from "@/lib/app/backup-io";
-import type { QuotaLevel } from "@/lib/app/media";
+import {
+  QUOTA_CRITICAL_RATIO,
+  QUOTA_WARN_RATIO,
+  type QuotaEstimate,
+  type QuotaLevel,
+} from "@/lib/app/media";
 
 const UNITS = ["B", "KB", "MB", "GB", "TB"] as const;
 
@@ -50,6 +55,17 @@ export function formatDateTime(iso: string): string {
   } catch {
     return "data desconhecida";
   }
+}
+
+/**
+ * Nível a partir da estimativa real do navegador. `null` (sem estimativa) nunca
+ * é promovido a "ok": vira `unknown`.
+ */
+export function levelFromEstimate(estimate: QuotaEstimate | null): QuotaLevel {
+  if (estimate === null) return "unknown";
+  if (estimate.ratio >= QUOTA_CRITICAL_RATIO) return "critical";
+  if (estimate.ratio >= QUOTA_WARN_RATIO) return "warn";
+  return "ok";
 }
 
 export function quotaLevelLabel(level: QuotaLevel): string {

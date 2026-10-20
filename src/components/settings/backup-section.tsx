@@ -13,14 +13,7 @@
  *   agregados + ajustes) — isso é dito ao aluno, não omitido.
  */
 
-import {
-  ArchiveRestore,
-  Download,
-  FileJson,
-  RotateCcw,
-  TriangleAlert,
-  Upload,
-} from "lucide-react";
+import { ArchiveRestore, Download, FileJson, RotateCcw, TriangleAlert, Upload } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -77,10 +70,7 @@ export function BackupSection({ layer, onDataChange }: BackupSectionProps) {
     setNotice(null);
     try {
       const json = await layer.backup.exportJson();
-      const ok = downloadTextFile(
-        backupFileName("pte-master-hub-backup", localDayKey()),
-        json,
-      );
+      const ok = downloadTextFile(backupFileName("pte-master-hub-backup", localDayKey()), json);
       setNotice(
         ok
           ? "Backup exportado. Guarde o arquivo JSON em um lugar seguro."
@@ -163,10 +153,7 @@ export function BackupSection({ layer, onDataChange }: BackupSectionProps) {
         null,
         2,
       )}\n`;
-      const ok = downloadTextFile(
-        backupFileName("pte-master-hub-quarentena", localDayKey()),
-        text,
-      );
+      const ok = downloadTextFile(backupFileName("pte-master-hub-quarentena", localDayKey()), text);
       setNotice(
         ok
           ? "Registros da quarentena exportados. Nada foi apagado do dispositivo."
@@ -335,9 +322,10 @@ export function BackupSection({ layer, onDataChange }: BackupSectionProps) {
         {flow.phase === "imported" ? (
           <InlineNote tone="success" title="Importação concluída" role="status">
             <p>
-              {flow.strategy === "merge" ? "Mesclado" : "Substituído"} com{" "}
-              {flow.snapshotCount} {flow.snapshotCount === 1 ? "registro de questão" : "registros de questão"} e{" "}
-              {flow.attemptCount} {flow.attemptCount === 1 ? "tentativa" : "tentativas"} no histórico.
+              {flow.strategy === "merge" ? "Mesclado" : "Substituído"} com {flow.snapshotCount}{" "}
+              {flow.snapshotCount === 1 ? "registro de questão" : "registros de questão"} e{" "}
+              {flow.attemptCount} {flow.attemptCount === 1 ? "tentativa" : "tentativas"} no
+              histórico.
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {flow.undoAvailable ? (
@@ -374,7 +362,9 @@ export function BackupSection({ layer, onDataChange }: BackupSectionProps) {
           <InlineNote tone="success" title="Importação desfeita" role="status">
             <p>
               Os dados anteriores voltaram.
-              {flow.createdAt.length > 0 ? ` Estado restaurado de ${formatDateTime(flow.createdAt)}.` : ""}
+              {flow.createdAt.length > 0
+                ? ` Estado restaurado de ${formatDateTime(flow.createdAt)}.`
+                : ""}
             </p>
           </InlineNote>
         ) : null}
@@ -469,7 +459,9 @@ export function BackupSection({ layer, onDataChange }: BackupSectionProps) {
                   <p className="break-all text-xs text-muted-foreground">
                     {formatDateTime(record.createdAt)} · {formatBytes(record.size)}
                   </p>
-                  <p className="text-xs leading-relaxed">{describeQuarantineReason(record.reason)}</p>
+                  <p className="text-xs leading-relaxed">
+                    {describeQuarantineReason(record.reason)}
+                  </p>
                 </div>
                 {record.future ? <StatusPill tone="warning">Versão futura</StatusPill> : null}
               </li>

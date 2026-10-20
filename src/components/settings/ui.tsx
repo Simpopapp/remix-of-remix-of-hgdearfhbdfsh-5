@@ -57,7 +57,10 @@ export function SettingsSection({
             <h2 id={headingId} className="font-serif text-lg font-semibold tracking-tight">
               {title}
             </h2>
-            <p id={descriptionId} className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            <p
+              id={descriptionId}
+              className="max-w-2xl text-sm leading-relaxed text-muted-foreground"
+            >
               {description}
             </p>
           </div>
@@ -241,7 +244,13 @@ export function InlineNote({
 }
 
 /** Rótulo curto de estado (não é botão). */
-export function StatusPill({ children, tone = "neutral" }: { children: ReactNode; tone?: NoteTone | "neutral" }) {
+export function StatusPill({
+  children,
+  tone = "neutral",
+}: {
+  children: ReactNode;
+  tone?: NoteTone | "neutral";
+}) {
   const toneClass =
     tone === "neutral"
       ? "border-border/70 text-muted-foreground"

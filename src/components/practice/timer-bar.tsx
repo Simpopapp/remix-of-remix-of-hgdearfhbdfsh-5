@@ -104,9 +104,7 @@ export function PracticeTimerBar({ spec, settingsStatus }: PracticeTimerBarProps
 
   const handleStart = () => {
     setState((current) =>
-      current.phase === "finished"
-        ? startTimer(resetTimer(spec), spec)
-        : startTimer(current, spec),
+      current.phase === "finished" ? startTimer(resetTimer(spec), spec) : startTimer(current, spec),
     );
   };
   const handlePause = () => setState((current) => pauseTimer(current));
@@ -190,12 +188,7 @@ export function PracticeTimerBar({ spec, settingsStatus }: PracticeTimerBarProps
 
             <div className="flex flex-wrap items-center justify-end gap-2">
               {state.running ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="min-h-11"
-                  onClick={handlePause}
-                >
+                <Button type="button" variant="outline" className="min-h-11" onClick={handlePause}>
                   <Pause className="size-4" aria-hidden="true" />
                   Pausar
                 </Button>
@@ -262,7 +255,9 @@ export function PracticeTimerBar({ spec, settingsStatus }: PracticeTimerBarProps
         </span>
         {spec.scale !== 1 ? (
           <span className="inline-flex items-center gap-1.5">
-            <span className="text-foreground/80">Escala {String(spec.scale).replace(".", ",")}×</span>
+            <span className="text-foreground/80">
+              Escala {String(spec.scale).replace(".", ",")}×
+            </span>
             {ajustesPath !== null ? (
               <Link
                 to={ajustesPath}

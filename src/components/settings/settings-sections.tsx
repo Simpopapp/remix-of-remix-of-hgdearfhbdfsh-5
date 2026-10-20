@@ -35,7 +35,14 @@ import {
 
 import { formatDayKey } from "./format";
 import { buildSettingsPatch, normalizeExamDateInput } from "./settings-patch";
-import { FieldRow, InlineNote, SegmentedControl, SettingsSection, StatusPill, ToggleRow } from "./ui";
+import {
+  FieldRow,
+  InlineNote,
+  SegmentedControl,
+  SettingsSection,
+  StatusPill,
+  ToggleRow,
+} from "./ui";
 
 export interface SectionProps {
   settings: AppSettings;
@@ -137,7 +144,11 @@ export function PracticeSection({ settings, onPatch, saving }: SectionProps) {
         description="Quando desligado, a prática fica sem contagem regressiva. O envio e a avaliação continuam iguais."
         checked={settings.practice.timersEnabled}
         onCheckedChange={(checked) => {
-          void onPatch(buildSettingsPatch({ practice: { timersEnabled: checked, timerScale: settings.practice.timerScale } }));
+          void onPatch(
+            buildSettingsPatch({
+              practice: { timersEnabled: checked, timerScale: settings.practice.timerScale },
+            }),
+          );
         }}
         disabled={saving}
       />
@@ -487,14 +498,16 @@ export function PrivacySection() {
           sua resposta e o contexto de correção. Nenhuma chave de acesso fica no navegador.
         </li>
         <li>
-          <span className="font-medium text-foreground">O processamento externo é explicado antes.</span>{" "}
+          <span className="font-medium text-foreground">
+            O processamento externo é explicado antes.
+          </span>{" "}
           A primeira vez que uma função de IA for usada, o app explica o envio e pede a sua decisão.
           Você pode estudar sem enviar respostas: a prática local e a revisão continuam funcionando.
         </li>
         <li>
           <span className="font-medium text-foreground">Gravações de fala.</span> O áudio é guardado
-          no dispositivo para você reouvir e para a avaliação de pronúncia quando ela existir. Ele só
-          é enviado ao serviço de IA quando uma avaliação de fala é solicitada.
+          no dispositivo para você reouvir e para a avaliação de pronúncia quando ela existir. Ele
+          só é enviado ao serviço de IA quando uma avaliação de fala é solicitada.
         </li>
       </ul>
       <InlineNote tone="info" title="Sobre o serviço de voz">

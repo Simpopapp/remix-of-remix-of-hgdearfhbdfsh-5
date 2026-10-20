@@ -26,9 +26,15 @@ import {
 import { StorageSection } from "@/components/settings/storage-section";
 import { InlineNote } from "@/components/settings/ui";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getProgressLayer, isProgressAvailable, type ProgressLayer } from "@/lib/app";
+import type { ProgressLayer } from "@/lib/app";
+import { getProgressLayer, isProgressAvailable } from "@/lib/app/progress-client";
 import type { QuotaEstimate } from "@/lib/app/media";
-import { readAppSettings, updateAppSettings, type AppSettings, type DeepPartialAppSettings } from "@/lib/app/settings";
+import {
+  readAppSettings,
+  updateAppSettings,
+  type AppSettings,
+  type DeepPartialAppSettings,
+} from "@/lib/app/settings";
 import { isSpeechAvailable, listEnglishVoices, onVoicesChanged } from "@/lib/speech";
 
 export const Route = createFileRoute("/ajustes")({
@@ -203,14 +209,10 @@ function AjustesPage() {
         <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">Seu painel</p>
         <h1 className="font-serif text-3xl font-semibold tracking-tight sm:text-4xl">Ajustes</h1>
         <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          Meta, ritmo de treino, voz e backup do seu progresso. Tudo é gravado neste dispositivo, sem
-          conta e sem nuvem de dados do aluno.
+          Meta, ritmo de treino, voz e backup do seu progresso. Tudo é gravado neste dispositivo,
+          sem conta e sem nuvem de dados do aluno.
         </p>
-        <p
-          role="status"
-          aria-live="polite"
-          className="min-h-5 text-xs text-muted-foreground"
-        >
+        <p role="status" aria-live="polite" className="min-h-5 text-xs text-muted-foreground">
           {saveState === "saving"
             ? "Salvando…"
             : saveState === "saved"
@@ -249,9 +251,9 @@ function AjustesPage() {
         <div className="mt-6">
           <InlineNote tone="danger" title="Não foi possível abrir seus ajustes" role="alert">
             <p>
-              O armazenamento local existe, mas não respondeu. Nada foi alterado. Recarregue a página
-              e tente de novo; se continuar, exporte um backup em outra sessão antes de fazer qualquer
-              mudança.
+              O armazenamento local existe, mas não respondeu. Nada foi alterado. Recarregue a
+              página e tente de novo; se continuar, exporte um backup em outra sessão antes de fazer
+              qualquer mudança.
             </p>
           </InlineNote>
         </div>
@@ -260,7 +262,11 @@ function AjustesPage() {
       {loadState === "ready" && settings !== null ? (
         <div className="mt-8 space-y-4 sm:space-y-5">
           <MetaSection settings={settings} onPatch={savePatch} saving={saveState === "saving"} />
-          <PracticeSection settings={settings} onPatch={savePatch} saving={saveState === "saving"} />
+          <PracticeSection
+            settings={settings}
+            onPatch={savePatch}
+            saving={saveState === "saving"}
+          />
           <TtsSection
             settings={settings}
             onPatch={savePatch}
@@ -268,7 +274,11 @@ function AjustesPage() {
             speechAvailable={speech.available}
             voices={speech.voices}
           />
-          <StudiePlusSection settings={settings} onPatch={savePatch} saving={saveState === "saving"} />
+          <StudiePlusSection
+            settings={settings}
+            onPatch={savePatch}
+            saving={saveState === "saving"}
+          />
           <BackupSection layer={layer} onDataChange={handleBackupDataChange} />
           <StorageSection
             quota={quota}

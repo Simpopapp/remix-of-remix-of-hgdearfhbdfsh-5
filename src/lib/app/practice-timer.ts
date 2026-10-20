@@ -126,9 +126,7 @@ export function timerForType(
   settings: AppSettings["practice"],
 ): TimerSpec {
   if (spec.id !== type) {
-    throw new Error(
-      `timerForType: spec de "${spec.id}" não corresponde ao tipo "${type}"`,
-    );
+    throw new Error(`timerForType: spec de "${spec.id}" não corresponde ao tipo "${type}"`);
   }
 
   const scale = settings.timerScale;

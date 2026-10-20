@@ -68,7 +68,9 @@ export function formatScoredSkillsDetailed(skills: readonly Section[]): string {
  * formatada como dia/mês/ano. Vem dos dados, nunca digitada aqui.
  */
 export function formatSourcesDate(): string | null {
-  const dates = EXAM_SOURCES.map((source) => source.consultedAt).filter(Boolean).sort();
+  const dates = EXAM_SOURCES.map((source) => source.consultedAt)
+    .filter(Boolean)
+    .sort();
   const latest = dates.at(-1);
   if (latest === undefined) return null;
   const [year, month, day] = latest.split("-");

@@ -4157,3 +4157,1263 @@ esm
 0
 -rw-r--r-- 1 root root 5785 20:39:18 src/routeTree.gen.ts
 [0m
+[0m$ [0mgrep -rn "tanstackRouter\|routerPlugin\|autoCodeSplitting\|generatedRouteTree" node_modules/@lovable.dev/vite-tanstack-config/dist/*.js node_modules/@lovable.dev/vite-tanstack-config/*.js 2>/dev/null | head -20; ls node_modules/@lovable.dev/vite-tanstack-config
+dist
+package.json
+README.md
+runtime
+[0m
+[0m$ [0mls node_modules/@lovable.dev/vite-tanstack-config/dist; grep -rln "tanstackStart" node_modules/@lovable.dev/vite-tanstack-config/dist | head
+dev-server-bridge.cjs
+dev-server-bridge.d.cts
+dev-server-bridge.d.ts
+dev-server-bridge.js
+hmr-gate.cjs
+hmr-gate.d.cts
+hmr-gate.d.ts
+hmr-gate.js
+index.cjs
+index.d.cts
+index.d.ts
+index.js
+node_modules/@lovable.dev/vite-tanstack-config/dist/index.cjs
+node_modules/@lovable.dev/vite-tanstack-config/dist/index.d.cts
+node_modules/@lovable.dev/vite-tanstack-config/dist/index.js
+node_modules/@lovable.dev/vite-tanstack-config/dist/index.d.ts
+[0m
+[0m$ [0mgrep -n "tanstackStart\|router" node_modules/@lovable.dev/vite-tanstack-config/dist/index.js | head -40
+120:/** Upstream's `joinURL("/", router.basepath)`: leading slash, no trailing slash, "" when unset. */
+204:function createDocumentSet(routerBasePath) {
+205:	const basePath = normalizeBasePath(routerBasePath);
+207:	if (!basePathServable) logWarning(`Not publishing any prerendered documents: router.basepath "${basePath}" is not a servable route.`);
+396:	const collector = createDocumentSet(userOptions.router?.basepath);
+1134:			options = "vite" in optionObject || "serverFnErrorLogger" in optionObject || "ssrErrorLogger" in optionObject || "nitro" in optionObject || "tanstackStart" in optionObject || "react" in optionObject || "envDefine" in optionObject || "hmrGate" in optionObject || "buildExitWatchdog" in optionObject ? optionObject : { vite: optionObject };
+1156:		const { tanstackStart } = await import("@tanstack/react-start/plugin/vite");
+1157:		const tanstackStartOptions = mergeConfig({ importProtection: {
+1163:		} }, options.tanstackStart ?? {});
+1164:		const prerenderEnabled = prerenderIsEnabled(tanstackStartOptions);
+1166:			const { startOptions, skipReporter, documentSet } = pinPrerenderForLovableBuild(tanstackStartOptions);
+1167:			internalPlugins.push(tanstackStart(startOptions), skipReporter, documentSet);
+1168:		} else internalPlugins.push(tanstackStart(tanstackStartOptions));
+[0m
+[0m$ [0mgrep -in "ENOSPC\|watch\|error" /tmp/dev-server-logs/dev-server.log | tail -20; cat /proc/sys/fs/inotify/max_user_watches 2>/dev/null; cat /proc/sys/fs/inotify/max_user_instances 2>/dev/null
+11:Error: aborted
+17:Error: aborted
+23:caused by: Error: aborted
+29:Error: aborted
+35:caused by: Error: aborted
+41:error: script "dev" exited with code 143
+44:error: script "dev" was terminated by signal SIGTERM (Polite quit request)
+524288
+524288
+[0m
+[0m$ [0mgrep -n "export" node_modules/@tanstack/router-generator/dist/esm/index.d.ts | head -30; echo ---; grep -n "class Generator" -A 30 node_modules/@tanstack/router-generator/dist/esm/generator.d.ts | head -60
+1:export { configSchema, getConfig, resolveConfigPath, baseConfigSchema, } from './config.js';
+2:export type { Config, BaseConfig } from './config.js';
+3:export { Generator } from './generator.js';
+4:export type { FileEventType, FileEvent, GeneratorEvent } from './generator.js';
+5:export type { GeneratorPlugin } from './plugin/types.js';
+6:export { capitalize, cleanPath, trimPathLeft, removeLeadingSlash, removeTrailingSlash, determineInitialRoutePath, replaceBackslash, routePathToVariable, removeUnderscores, resetRegex, multiSortBy, writeIfDifferent, format, removeExt, checkRouteFullPathUniqueness, inferFullPath, } from './utils.js';
+7:export type { RouteNode, GetRouteNodesResult, GetRoutesByFileMapResult, GetRoutesByFileMapResultValue, ImportDeclaration, ImportSpecifier, HandleNodeAccumulator, } from './types.js';
+8:export { getRouteNodes as physicalGetRouteNodes } from './filesystem/physical/getRouteNodes.js';
+9:export { getRouteNodes as virtualGetRouteNodes } from './filesystem/virtual/getRouteNodes.js';
+10:export { rootPathId } from './filesystem/physical/rootPathId.js';
+11:export type { TransformContext, TransformOptions } from './transform/types.js';
+---
+35:export declare class Generator {
+36-    /**
+37-     * why do we have two caches for the route files?
+38-     * During processing, we READ from the cache and WRITE to the shadow cache.
+39-     *
+40-     * After a route file is processed, we write to the shadow cache.
+41-     * If during processing we bail out and re-run, we don't lose this modification
+42-     * but still can track whether the file contributed changes and thus the route tree file needs to be regenerated.
+43-     * After all files are processed, we swap the shadow cache with the main cache and initialize a new shadow cache.
+44-     * That way we also ensure deleted/renamed files don't stay in the cache forever.
+45-     */
+46-    private routeNodeCache;
+47-    private routeNodeShadowCache;
+48-    private routeTreeFileCache;
+49-    private crawlingResult;
+50-    config: Config;
+51-    targetTemplate: TargetTemplate;
+52-    private root;
+53-    private routesDirectoryPath;
+54-    private sessionId?;
+55-    private fs;
+56-    private logger;
+57-    private generatedRouteTreePath;
+58-    private runPromise;
+59-    private fileEventQueue;
+60-    private plugins;
+61-    private static routeGroupPatternRegex;
+62-    private physicalDirectories;
+63-    /**
+64-     * Token regexes are pre-compiled once here and reused throughout route processing.
+65-     * We need TWO types of regex for each token because they match against different inputs:
+[0m
+[0m$ [0msed -n '35,90p' node_modules/@tanstack/router-generator/dist/esm/config.d.ts; echo ---; grep -n "constructor\|init\|run(" node_modules/@tanstack/router-generator/dist/esm/generator.d.ts | head -20
+routeToken: z.ZodDefault<z.ZodOptional<z.ZodUnion<readonly [z.ZodString, z.ZodCustom<RegExp, RegExp>, z.ZodObject<{
+        regex: z.ZodString;
+        flags: z.ZodOptional<z.ZodString>;
+    }, z.core.$strip>]>>>;
+    pathParamsAllowedCharacters: z.ZodOptional<z.ZodArray<z.ZodEnum<{
+        ":": ":";
+        $: "$";
+        ";": ";";
+        "@": "@";
+        "&": "&";
+        "=": "=";
+        "+": "+";
+        ",": ",";
+    }>>>;
+}, z.core.$strip>;
+export type BaseConfig = z.infer<typeof baseConfigSchema>;
+export declare const configSchema: z.ZodObject<{
+    target: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+        vue: "vue";
+        react: "react";
+        solid: "solid";
+    }>>>;
+    virtualRouteConfig: z.ZodOptional<z.ZodUnion<[z.ZodType<import('@tanstack/virtual-file-routes').VirtualRootRoute, unknown, z.core.$ZodTypeInternals<import('@tanstack/virtual-file-routes').VirtualRootRoute, unknown>>, z.ZodString]>>;
+    routeFilePrefix: z.ZodOptional<z.ZodString>;
+    routeFileIgnorePrefix: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+    routeFileIgnorePattern: z.ZodOptional<z.ZodString>;
+    routesDirectory: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+    quoteStyle: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+        single: "single";
+        double: "double";
+    }>>>;
+    semicolons: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+    disableLogging: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+    routeTreeFileHeader: z.ZodDefault<z.ZodOptional<z.ZodArray<z.ZodString>>>;
+    indexToken: z.ZodDefault<z.ZodOptional<z.ZodUnion<readonly [z.ZodString, z.ZodCustom<RegExp, RegExp>, z.ZodObject<{
+        regex: z.ZodString;
+        flags: z.ZodOptional<z.ZodString>;
+    }, z.core.$strip>]>>>;
+    routeToken: z.ZodDefault<z.ZodOptional<z.ZodUnion<readonly [z.ZodString, z.ZodCustom<RegExp, RegExp>, z.ZodObject<{
+        regex: z.ZodString;
+        flags: z.ZodOptional<z.ZodString>;
+    }, z.core.$strip>]>>>;
+    pathParamsAllowedCharacters: z.ZodOptional<z.ZodArray<z.ZodEnum<{
+        ":": ":";
+        $: "$";
+        ";": ";";
+        "@": "@";
+        "&": "&";
+        "=": "=";
+        "+": "+";
+        ",": ",";
+    }>>>;
+    generatedRouteTree: z.ZodDefault<z.ZodOptional<z.ZodString>>;
+    disableTypes: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+    addExtensions: z.ZodPipe<z.ZodDefault<z.ZodOptional<z.ZodUnion<readonly [z.ZodBoolean, z.ZodString]>>>, z.ZodTransform<string | boolean, string | boolean>>;
+    enableRouteTreeFormatting: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+---
+43:     * After all files are processed, we swap the shadow cache with the main cache and initialize a new shadow cache.
+84:    constructor(opts: {
+92:    run(event?: GeneratorEvent): Promise<void>;
+[0m
+[0m$ [0msed -n '84,100p' node_modules/@tanstack/router-generator/dist/esm/generator.d.ts; echo ---; grep -n "export function getConfig" -A 20 node_modules/@tanstack/router-generator/dist/esm/config.d.ts
+constructor(opts: {
+        config: Config;
+        root: string;
+        fs?: fs;
+    });
+    private getGeneratedRouteTreePath;
+    private getRoutesDirectoryPath;
+    getRoutesByFileMap(): GetRoutesByFileMapResult;
+    run(event?: GeneratorEvent): Promise<void>;
+    private generatorInternal;
+    private swapCaches;
+    buildRouteTree(opts: {
+        rootRouteNode: RouteNode;
+        acc: HandleNodeAccumulator;
+        routeFileResult: Array<RouteNode>;
+        config?: Partial<Config>;
+    }): {
+---
+[0m
+[0m$ [0mgrep -n "getConfig\|resolveConfigPath" node_modules/@tanstack/router-generator/dist/esm/config.d.ts; sed -n "$(grep -n 'getConfig' node_modules/@tanstack/router-generator/dist/esm/config.d.ts | head -1 | cut -d: -f1),+25p" node_modules/@tanstack/router-generator/dist/esm/config.d.ts
+108:export declare function resolveConfigPath({ configDirectory }: ResolveParams): string;
+109:export declare function getConfig(inlineConfig?: Partial<Config>, configDirectory?: string): Config;
+export declare function getConfig(inlineConfig?: Partial<Config>, configDirectory?: string): Config;
+export {};
+[0m
+[0m$ [0mgrep -n "autoCodeSplitting" src/routeTree.gen.ts | head; grep -rn "new Generator" node_modules/@tanstack/router-plugin/dist/esm/*.js node_modules/@tanstack/router-plugin/dist/esm/**/*.js 2>/dev/null | head
+node_modules/@tanstack/router-plugin/dist/esm/core/router-generator-plugin.js:19:		generator = new Generator({
+[0m
+[0m$ [0msed -n '1,60p' node_modules/@tanstack/router-plugin/dist/esm/core/router-generator-plugin.js; echo ---; head -30 src/routeTree.gen.ts
+import { getConfig as getConfig$1 } from "./config.js";
+import { createRouterPluginContext } from "./router-plugin-context.js";
+import { Generator, resolveConfigPath } from "@tanstack/router-generator";
+import { isAbsolute, join, normalize } from "node:path";
+//#region src/core/router-generator-plugin.ts
+var PLUGIN_NAME = "unplugin:router-generator";
+function createRouterGeneratorPlugin(options = {}, routerPluginContext) {
+	let ROOT = process.cwd();
+	let userConfig;
+	let generator;
+	const routeGenerationDisabled = () => userConfig.enableRouteGeneration === false;
+	const getRoutesDirectoryPath = () => {
+		return isAbsolute(userConfig.routesDirectory) ? userConfig.routesDirectory : join(ROOT, userConfig.routesDirectory);
+	};
+	const initConfigAndGenerator = (opts) => {
+		if (opts?.root) ROOT = opts.root;
+		if (typeof options === "function") userConfig = options();
+		else userConfig = getConfig$1(options, ROOT);
+		generator = new Generator({
+			config: userConfig,
+			root: ROOT
+		});
+	};
+	const generate = async (opts) => {
+		if (routeGenerationDisabled()) return;
+		let generatorEvent = void 0;
+		if (opts) {
+			const filePath = normalize(opts.file);
+			if (filePath === resolveConfigPath({ configDirectory: ROOT })) {
+				initConfigAndGenerator();
+				return;
+			}
+			generatorEvent = {
+				path: filePath,
+				type: opts.event
+			};
+		}
+		try {
+			await generator.run(generatorEvent);
+			routerPluginContext.routesByFile = generator.getRoutesByFileMap();
+		} catch (e) {
+			console.error(e);
+		}
+	};
+	return {
+		name: "tanstack:router-generator",
+		enforce: "pre",
+		async watchChange(id, { event }) {
+			await generate({
+				file: id,
+				event
+			});
+		},
+		vite: { async configResolved(config) {
+			initConfigAndGenerator({ root: config.root });
+			await generate();
+		} },
+		rspack(compiler) {
+			initConfigAndGenerator();
+			let handle = null;
+---
+/* eslint-disable */
+
+// @ts-nocheck
+
+// noinspection JSUnusedGlobalSymbols
+
+// This file was automatically generated by TanStack Router.
+// You should NOT make any changes in this file as it will be overwritten.
+// Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
+
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as AjustesRouteImport } from './routes/ajustes'
+import { Route as CatalogoRouteImport } from './routes/catalogo'
+import { Route as DiagnosticoRouteImport } from './routes/diagnostico'
+import { Route as ProgressoRouteImport } from './routes/progresso'
+import { Route as SimuladoRouteImport } from './routes/simulado'
+import { Route as PraticarTypeRouteImport } from './routes/praticar.$type'
+import { Route as SessoesIndexRouteImport } from './routes/sessoes/index'
+import { Route as SessoesIdRouteImport } from './routes/sessoes/$id'
+
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AjustesRoute = AjustesRouteImport.update({
+  id: '/ajustes',
+  path: '/ajustes',
+  getParentRoute: () => rootRouteImport,
+[0m
+[0m$ [0mls -l --time-style=+%H:%M:%S src/routeTree.gen.ts; grep -c praticar src/routeTree.gen.ts; ls src/routes
+-rw-r--r-- 1 root root 7141 20:47:24 src/routeTree.gen.ts
+13
+ajustes.tsx
+catalogo.tsx
+diagnostico.tsx
+index.tsx
+praticar.$type.tsx
+progresso.tsx
+README.md
+__root.tsx
+sessoes
+simulado.tsx
+[0m
+[0m$ [0mgrep -n "PraticarType" -A 8 src/routeTree.gen.ts | head -20; sed -n '1,20p' 'src/routes/praticar.$type.tsx' | head -3
+18:import { Route as PraticarTypeRouteImport } from './routes/praticar.$type'
+19-import { Route as SessoesIndexRouteImport } from './routes/sessoes/index'
+20-import { Route as SessoesIdRouteImport } from './routes/sessoes/$id'
+21-
+22-const IndexRoute = IndexRouteImport.update({
+23-  id: '/',
+24-  path: '/',
+25-  getParentRoute: () => rootRouteImport,
+26-} as any)
+--
+52:const PraticarTypeRoute = PraticarTypeRouteImport.update({
+53-  id: '/praticar/$type',
+54-  path: '/praticar/$type',
+55-  getParentRoute: () => rootRouteImport,
+56-} as any)
+57-const SessoesIndexRoute = SessoesIndexRouteImport.update({
+58-  id: '/sessoes/',
+59-  path: '/sessoes/',
+60-  getParentRoute: () => rootRouteImport,
+--
+/**
+ * `/praticar/$type` — shell genérico de prática (Fase 4 — s5-pratica).
+ *
+[0m
+[0m$ [0mbunx tsgo --noEmit 2>&1 | tail -40
+src/routes/praticar.$type.tsx(85,48): error TS2345: Argument of type 'string' is not assignable to parameter of type '"answer_short" | "describe_image" | "lst_fib" | "lst_hcs" | "lst_hiw" | "lst_mcq_multi" | "lst_mcq_single" | "lst_smw" | "read_aloud" | "read_fib_drag" | "read_fib_dropdown" | ... 10 more ... | "write_essay"'.
+[0m
+[0m$ [0msed -n '78,92p' 'src/routes/praticar.$type.tsx'
+const { data: manifest } = useSuspenseQuery(manifestQuery);
+  const entries = useMemo(() => deriveCatalog(manifest), [manifest]);
+  const entry = entries.find((item) => item.type === type);
+  const spec = examTaskSpecFor(type);
+
+  const practiceSettings = usePracticeSettings();
+  const timerSpec = useMemo(
+    () => (spec === null ? null : timerForType(spec.id, spec, practiceSettings.settings.practice)),
+    [spec, practiceSettings.settings.practice],
+  );
+
+  // `beforeLoad` já garantiu o spec; a entrada do catálogo cobre os 22 tipos do contrato.
+  // A guarda existe para que uma futura inconsistência falhe como 404, não como tela vazia.
+  if (spec === null || entry === undefined || timerSpec === null) throw notFound();
+[0m
+[0m$ [0mgrep -n "id:" src/data/exam-spec.ts | head -5; grep -n "interface ExamTaskSpec" -A 12 src/data/exam-spec.ts
+33:  id: string;
+62:  id: "full-mock";
+134:      id: "part-1",
+141:      id: "part-2",
+148:      id: "part-3",
+31:export interface ExamTaskSpec {
+32-  /** Id canônico do banco de questões (`src/data/bank/<tipo>.json`). */
+33-  id: string;
+34-  section: "speaking" | "writing" | "reading" | "listening";
+35-  /** Nome oficial em inglês. */
+36-  name: string;
+37-  /** Nome amigável em pt-BR (interface). */
+38-  namePt: string;
+39-  /** Quantidade típica de tarefas deste tipo na prova (número ou faixa oficial). */
+40-  scoredTasksInExam: number | [number, number];
+41-  /** Segundos de preparação; ausente quando a tarefa não tem preparação. */
+42-  preparationSeconds?: number;
+43-  /** Segundos de resposta (ou janela especial). */
+[0m
+[0m← [0mEdit src/routes/praticar.$type.tsx
+Index: /dev-server/src/routes/praticar.$type.tsx
+===================================================================
+--- /dev-server/src/routes/praticar.$type.tsx
++++ /dev-server/src/routes/praticar.$type.tsx
+@@ -80,12 +80,14 @@
+ const entry = entries.find((item) => item.type === type);
+ const spec = examTaskSpecFor(type);
+ 
+ const practiceSettings = usePracticeSettings();
+-const timerSpec = useMemo(
+-  () => (spec === null ? null : timerForType(spec.id, spec, practiceSettings.settings.practice)),
+-  [spec, practiceSettings.settings.practice],
+-);
++const timerSpec = useMemo(() => {
++  // `exam-spec` tipa o id como string (o catálogo do banco é a autoridade). O guard
++  // fecha a fronteira antes de entregar o tipo ao contrato da Fase 6.
++  if (spec === null || !isTaskType(spec.id)) return null;
++  return timerForType(spec.id, spec, practiceSettings.settings.practice);
++}, [spec, practiceSettings.settings.practice]);
+ 
+ // `beforeLoad` já garantiu o spec; a entrada do catálogo cobre os 22 tipos do contrato.
+ // A guarda existe para que uma futura inconsistência falhe como 404, não como tela vazia.
+ if (spec === null || entry === undefined || timerSpec === null) throw notFound();
+
+[0m
+[0m$ [0mgrep -n "isTaskType" src/domain/index.ts src/domain/question.ts | head; sed -n '1,20p' 'src/routes/praticar.$type.tsx'
+src/domain/question.ts:98:export function isTaskType(value: unknown): value is TaskType {
+/**
+ * `/praticar/$type` — shell genérico de prática (Fase 4 — s5-pratica).
+ *
+ * Esta rota é o esqueleto que vai receber os 22 motores da Fase 6. Hoje ela entrega:
+ *
+ * - validação do tipo contra `TASK_TYPES`/`exam-spec` (tipo inventado → 404, nunca uma
+ *   tela de um tipo que não existe);
+ * - `head()` próprio por tipo (título, descrição, og/twitter) derivado do catálogo;
+ * - a ficha do formato oficial (seção, tempos, limite, habilidades, notas e a data de
+ *   consulta das fontes) — tudo de `exam-spec.ts`;
+ * - a contagem de itens vinda do manifesto (nunca digitada);
+ * - o cronômetro de DEMONSTRAÇÃO, alimentado por `timerForType` + Ajustes;
+ * - um slot honesto para o motor: nada de pergunta fake, campo morto ou "Enviar" que
+ *   não envia.
+ *
+ * SSR-safe: ficha, tempos e contagem derivam de dados estáticos + manifesto; os
+ * Ajustes (IndexedDB) só são lidos em `useEffect` dentro de `usePracticeSettings`.
+ */
+
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+[0m
+[0m$ [0mcat src/domain/index.ts | head -30
+/**
+ * Barrel dos contratos de domínio — importe daqui (`@/domain`), não de arquivos
+ * internos, para que a forma pública dos contratos fique num só lugar.
+ *
+ * Mapa dos contratos e quem consome:
+ * - `question`     — Questão (espelho do schema do banco) · Fase 2 (importador/manifesto),
+ *                    Fase 4 (catálogo), Fase 5 (harness), Fase 6 (motores), Fase 11 (proveniência).
+ * - `attempt`      — Tentativa (log append-only, truncável) · Fase 3 (log), Fase 5/6 (gravação),
+ *                    Fase 7 (histórico).
+ * - `snapshot`     — Snapshot por questão (fonte das métricas) · Fase 3 (storage), Fase 7 (fila/
+ *                    diagnóstico), Fase 8 (agregados), Fase 10 (notas).
+ * - `aggregates`   — Agregados deriváveis + estimativa 10–90 rotulada · Fase 8 (medição honesta),
+ *                    Fase 9 (relatório pós-simulado).
+ * - `evaluation`   — Resultado do avaliador de IA (scored/abstained/needs_review) · Fase 5 (harness),
+ *                    Fase 6 (motores), Fase 9 (relatório).
+ * - `backup`       — Envelope versionado + migração só-aditiva · Fase 3 (import/export, quarentena),
+ *                    Fase 13 (E2E de backup).
+ * - `day`          — Chaves de dia local (`YYYY-MM-DD` no fuso do aluno) · Fases 3, 7, 8.
+ * - `schema`       — Validadores de runtime (`parseX`) sem dependência externa · todas as fases.
+ *
+ * Todos os módulos são puros: zero I/O, zero React, zero TanStack, zero rede.
+ */
+
+export * from "./aggregates";
+export * from "./attempt";
+export * from "./backup";
+export * from "./day";
+export * from "./evaluation";
+export * from "./question";
+export * from "./schema";
+[0m
+[0m← [0mEdit src/routes/praticar.$type.tsx
+Index: /dev-server/src/routes/praticar.$type.tsx
+===================================================================
+--- /dev-server/src/routes/praticar.$type.tsx
++++ /dev-server/src/routes/praticar.$type.tsx
+@@ -29,8 +29,9 @@
+   usePracticeSettings,
+ } from "@/components/practice";
+ import { Skeleton } from "@/components/ui/skeleton";
+ import { loadManifest } from "@/data/loader";
++import { isTaskType } from "@/domain";
+ import { SECTION_LABELS, deriveCatalog } from "@/lib/app/catalogo";
+ import { examTaskSpecFor, timerForType } from "@/lib/app/practice-timer";
+ 
+ const manifestQuery = queryOptions({
+
+[0m
+[0m$ [0mbunx tsgo --noEmit 2>&1 | tail -40
+(no output)
+[0m
+[0m$ [0mbunx vitest run 2>&1 | tail -25
+RUN  v5.0.3 /dev-server
+
+
+ Test Files  26 passed (26)
+      Tests  385 passed (385)
+   Start at  20:48:20
+   Duration  4.59s (environment 60%, transform 12%, setup 11%, tests 10%, import 7%, worker 1%)
+
+Environment  jsdom was created 26 times · 16.15s total, 60% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+[0m
+[0m$ [0mfor p in /praticar/wfd /praticar/describe_image /praticar/read_fib_dropdown /praticar/nao-existe; do printf "%s -> " "$p"; curl -s -o /tmp/out.html -w "%{http_code}\n" "http://localhost:8080$p"; done; echo "---"; grep -o "<title>[^<]*</title>" /tmp/out.html | head -2
+/praticar/wfd -> 404
+/praticar/describe_image -> 404
+/praticar/read_fib_dropdown -> 404
+/praticar/nao-existe -> 404
+---
+grep: /tmp/out.html: binary file matches
+[0m
+[0m$ [0mfor p in /ajustes /catalogo /praticar/wfd; do printf "%s -> " "$p"; curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:8080$p"; done; echo ---; tail -25 /tmp/dev-server-logs/dev-server.log
+/ajustes -> 404
+/catalogo -> 200
+/praticar/wfd -> 404
+---
+    at Socket.emit (node:events:531:35)
+    at TCP.<anonymous> (node:net:346:12)
+    at TCP.callbackTrampoline (node:internal/async_hooks:130:17)
+error: script "dev" exited with code 143
+Install skipped - install inputs unchanged and install complete marker exists
+$ vite dev --port "8080"
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)
+Install skipped - install inputs unchanged and install complete marker exists
+$ vite dev --port "8080"
+The plugin "vite-tsconfig-paths" is detected. Vite now supports tsconfig paths resolution natively via the resolve.tsconfigPaths option. You can remove the plugin and set resolve.tsconfigPaths: true in your Vite config instead.
+
+  VITE v8.1.5  ready in 695 ms
+
+  ➜  Local:   http://localhost:8080/
+  ➜  Network: http://100.64.0.1:8080/
+8:40:14 PM [vite] (ssr) connected.
+8:45:44 PM [vite] (client) hmr update /src/styles.css?direct, /src/routes/catalogo.tsx, /src/routes/index.tsx?tsr-split=component, /src/routes/index.tsx?tsr-split=component&t=1792529079
+8:45:44 PM [vite] (ssr) page reload src/data/generated/manifest.json
+8:45:44 PM [vite] (ssr) program reload
+8:45:44 PM [vite] (client) hmr update /src/styles.css?direct, /src/routes/catalogo.tsx, /src/routes/index.tsx?tsr-split=component, /src/routes/index.tsx?tsr-split=component&t=1792529079
+8:45:44 PM [vite] (ssr) page reload src/data/generated/index.json
+8:45:44 PM [vite] (client) hmr update /src/styles.css?direct, /src/routes/index.tsx?tsr-split=component, /src/routes/index.tsx?tsr-split=component&t=1792529079
+8:45:44 PM [vite] (ssr) page reload src/lib/app/plano-do-dia.ts
+8:45:44 PM [vite] (client) hmr update /src/styles.css?direct, /src/routes/index.tsx, /src/routes/index.tsx?tsr-split=component, /src/routes/index.tsx?tsr-split=component&t=1792529079
+8:45:44 PM [vite] (ssr) page reload src/routes/index.tsx
+[0m
+[0m→ [0mRead src/lib/app/practice-timer.ts[90m [offset=140, limit=126][0m
+[0m
+[0m$ [0msed -n '1,80p' node_modules/@lovable.dev/vite-tanstack-config/dist/hmr-gate.cjs
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+let node_crypto = require("node:crypto");
+let node_fs = require("node:fs");
+//#region src/hmr-gate/index.ts
+const statusCorsOriginRe = /^(?:https:\/\/(?:[^/]+\.)?lovable\.dev|https?:\/\/(?:(?:[^/:]+\.)?localhost|127\.0\.0\.1|\[::1\]))(?::\d+)?$/;
+function requestPathname(req) {
+	const url = req.url ?? "";
+	const queryStart = url.indexOf("?");
+	return queryStart === -1 ? url : url.slice(0, queryStart);
+}
+const nonNavigationPrefixes = [
+	"/@vite/",
+	"/@fs/",
+	"/@id/",
+	"/@react-refresh",
+	"/api/",
+	"/go-api/",
+	"/assets/",
+	"/src/",
+	"/_",
+	"/favicon"
+];
+function isHtmlNavigationRequest(req) {
+	if (req.method !== "GET") return false;
+	const url = req.url;
+	if (!url || nonNavigationPrefixes.some((prefix) => url.startsWith(prefix))) return false;
+	return (req.headers.accept ?? "").includes("text/html");
+}
+function gateStatusHeaders(req) {
+	const origin = req.headers.origin;
+	const headers = {
+		"Content-Type": "application/json",
+		Vary: "Origin"
+	};
+	if (typeof origin === "string" && statusCorsOriginRe.test(origin)) headers["Access-Control-Allow-Origin"] = origin;
+	return headers;
+}
+const DEV_SERVER_MODE_EVENT = "lovable:dev-server-mode";
+const BOOT_PROGRESS_EVENT = "lovable:boot-progress";
+const BOOT_PROGRESS_MIN_INTERVAL_MS = 500;
+const UPDATE_PROGRESS_EVENT = "lovable:update-progress";
+const UPDATE_PROGRESS_MIN_INTERVAL_MS = 500;
+const UPDATE_SETTLE_MS = 800;
+const UPDATE_FLUSH_SETTLE_MS = 5e3;
+const UPDATE_MIN_MODULES = 10;
+const UPDATE_MIN_DURATION_MS = 1500;
+function firstBuildError(error) {
+	if (error == null || typeof error !== "object") return null;
+	const errors = error.errors;
+	const e = Array.isArray(errors) && errors.length > 0 ? errors[0] : error;
+	const message = typeof e.message === "string" ? e.message : "Build failed";
+	let file = null;
+	if (typeof e.loc?.file === "string") file = e.loc.file;
+	else if (typeof e.id === "string") file = e.id;
+	return {
+		message,
+		file,
+		line: typeof e.loc?.line === "number" ? e.loc.line : null
+	};
+}
+function hookEnvironmentName(context) {
+	return context.environment?.name ?? "shared";
+}
+const EDIT_FREE_RELOAD_MARKER = "edit-free";
+/** Host-controlled default for `fullReload`; an explicit option still wins. */
+const FULL_RELOAD_ENV_VAR = "LOVABLE_HMR_FULL_RELOAD";
+function hmrGatePlugin(options = {}) {
+	const fullReload = options.fullReload ?? process.env["LOVABLE_HMR_FULL_RELOAD"] !== "false";
+	const gatedEvents = new Set(options.events ?? [
+		"change",
+		"add",
+		"unlink"
+	]);
+	const passthroughPatterns = options.passthrough ?? [];
+	const pending = /* @__PURE__ */ new Map();
+	const lastFlushedHashes = /* @__PURE__ */ new Map();
+	let originalEmit = null;
+	let server = null;
+	let generation = null;
+	const transformsByEnv = /* @__PURE__ */ new Map();
+[0m
+[0m$ [0mfor p in /ajustes /praticar/wfd; do printf "%s -> " "$p"; curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:8080$p"; done; tail -6 /tmp/dev-server-logs/dev-server.log
+/ajustes -> 404
+/praticar/wfd -> 404
+8:45:44 PM [vite] (client) hmr update /src/styles.css?direct, /src/routes/catalogo.tsx, /src/routes/index.tsx?tsr-split=component, /src/routes/index.tsx?tsr-split=component&t=1792529079
+8:45:44 PM [vite] (ssr) page reload src/data/generated/index.json
+8:45:44 PM [vite] (client) hmr update /src/styles.css?direct, /src/routes/index.tsx?tsr-split=component, /src/routes/index.tsx?tsr-split=component&t=1792529079
+8:45:44 PM [vite] (ssr) page reload src/lib/app/plano-do-dia.ts
+8:45:44 PM [vite] (client) hmr update /src/styles.css?direct, /src/routes/index.tsx, /src/routes/index.tsx?tsr-split=component, /src/routes/index.tsx?tsr-split=component&t=1792529079
+8:45:44 PM [vite] (ssr) page reload src/routes/index.tsx
+[0m
+[0m$ [0mgrep -n "describe(\|it(" src/test/app/practice-timer.test.ts | head -60; echo ---; grep -c "it(" src/test/app/practice-timer.test.ts
+55:describe("exam-spec — todo tipo do domínio tem formato oficial", () => {
+56:  it("cobre exatamente os 22 tipos do contrato, sem sobra nem falta", () => {
+69:  it("a versão tolerante devolve null para tipo inválido (URL crua)", () => {
+80:describe("timerForType — formatos reais do exame", () => {
+81:  it("preparação + resposta fixa (describe_image: 25 s / 40 s)", () => {
+92:  it("resposta fixa sem preparação (repeat_sentence: 15 s)", () => {
+100:  it("until_audio — a resposta acompanha o áudio, sem número falso", () => {
+110:  it("shared_section — tempo da seção, sem cronômetro por item", () => {
+123:  it("resposta longa de escrita é convertida (swt: 10 min, write_essay: 20 min)", () => {
+128:  it("todos os 22 tipos produzem tempos finitos e não negativos", () => {
+139:  it("rejeita spec de outro tipo (não exibe o tempo errado)", () => {
+150:describe("timerForType — escala de treino", () => {
+151:  it("1,5× multiplica preparação e resposta", () => {
+158:  it("2× dobra os tempos e não inventa tempo para janelas não fixas", () => {
+168:  it("1× mantém o tempo oficial do tipo", () => {
+177:describe("timerForType — cronômetro desligado nos Ajustes", () => {
+178:  it("mantém os tempos exibidos mas não deixa nada correr", () => {
+187:  it("um tipo sem contagem continua sem contagem", () => {
+199:describe("máquina de estados do cronômetro", () => {
+202:  it("começa parado na preparação com o tempo cheio", () => {
+210:  it("preparação zera e entra automaticamente na resposta", () => {
+221:  it("o restante nunca fica negativo", () => {
+228:  it("pausa não perde tempo e retomar continua de onde parou", () => {
+245:  it("preparação sem resposta fixa encerra ao zerar (nada de fase fantasma)", () => {
+253:  it("reiniciar volta à primeira fase com o tempo cheio", () => {
+260:  it("tipo sem contagem fica indisponível e não inicia", () => {
+267:  it("progresso vai de 0 a 1 na fase corrente", () => {
+284:describe("formatação de duração", () => {
+285:  it("segundos, minutos exatos e minutos + segundos", () => {
+294:  it("contagem regressiva arredonda para cima (não zera antes do fim)", () => {
+---
+24
+[0m
+[0m$ [0mcat src/components/layout/use-resolved-path.ts
+/**
+ * Resolve se um caminho de navegação existe no route tree ATUAL.
+ *
+ * Por que isso existe: a navegação da Fase 4 aponta para rotas que chegam em
+ * ondas diferentes (Catálogo, Ajustes, Prática). Em vez de espalhar links
+ * quebrados ou `<a href>` (proibido para rotas internas), o menu pergunta ao
+ * router o que já está registrado: rota ausente vira item honesto "em breve",
+ * rota presente vira `Link` tipado em runtime. Assim nenhum pacote precisa
+ * editar o layout para "ligar" o próprio item.
+ *
+ * O route tree é estático (gerado no build), então o resultado é o mesmo no
+ * servidor e no cliente — sem mismatch de hidratação.
+ */
+
+import { useRouter } from "@tanstack/react-router";
+
+type RouteLike = { fullPath?: unknown } | undefined;
+
+/**
+ * Caminho registrado para `path`, tentando também a variante com barra final
+ * (`/sessoes` ↔ `/sessoes/`), que é como rotas de diretório aparecem no tree.
+ */
+export function resolveRegisteredPath(routesByPath: unknown, path: string): string | null {
+  if (typeof routesByPath !== "object" || routesByPath === null) return null;
+  const routes = routesByPath as Record<string, RouteLike>;
+  const candidates = path === "/" ? ["/"] : [path, `${path}/`];
+  for (const candidate of candidates) {
+    const route = routes[candidate];
+    if (route === undefined) continue;
+    const fullPath = route.fullPath;
+    return typeof fullPath === "string" && fullPath.length > 0 ? fullPath : candidate;
+  }
+  return null;
+}
+
+/** Versão React: caminho registrado agora, ou `null` (rota ainda não existe). */
+export function useResolvedPath(path: string): string | null {
+  const router = useRouter();
+  return resolveRegisteredPath(router.routesByPath, path);
+}
+
+/** Normaliza para comparação (barra final não muda a rota). */
+export function normalizePathname(pathname: string): string {
+  if (pathname.length > 1 && pathname.endsWith("/")) return pathname.slice(0, -1);
+  return pathname;
+}
+
+/** `true` quando `pathname` é a rota ou uma rota filha dela. */
+export function isPathActive(pathname: string, href: string): boolean {
+  const current = normalizePathname(pathname);
+  const target = normalizePathname(href);
+  if (current === target) return true;
+  if (target === "/") return false;
+  return current.startsWith(`${target}/`);
+}
+[0m
+[0m$ [0mbunx eslint src/components/practice 'src/routes/praticar.$type.tsx' src/lib/app/practice-timer.ts src/test/app/practice-timer.test.ts 2>&1 | tail -30
+/dev-server/src/components/practice/engine-slot.tsx
+  52:96  error  Insert `·Esta`                                                                                                                                                                                                                 prettier/prettier
+  53:10  error  Replace `·Esta·página·já·traz·o·formato·oficial·do·tipo,·a·contagem·de·itens·do·banco·e·o⏎··········cronômetro·de` with `·página·já·traz·o·formato·oficial·do·tipo,·a·contagem·de·itens·do·banco·e·o·cronômetro·de⏎·········`  prettier/prettier
+
+/dev-server/src/components/practice/spec-format.ts
+  71:65  error  Replace `.filter(Boolean)` with `⏎····.filter(Boolean)⏎····`  prettier/prettier
+
+/dev-server/src/components/practice/task-spec-card.tsx
+  104:95  error  Insert `·acima`                                                                                                                                                                                                               prettier/prettier
+  105:12  error  Replace `·acima·são·uma·aproximação·declarada·—·pesos·de·estimativa·(Fase·8)·nunca·serão⏎············apresentados` with `·são·uma·aproximação·declarada·—·pesos·de·estimativa·(Fase·8)·nunca·serão·apresentados⏎···········`  prettier/prettier
+
+/dev-server/src/components/practice/timer-bar.tsx
+  107:35  error  Replace `⏎········?·startTimer(resetTimer(spec),·spec)⏎·······` with `·?·startTimer(resetTimer(spec),·spec)`                                                                                                                                                       prettier/prettier
+  193:24  error  Replace `⏎··················type="button"⏎··················variant="outline"⏎··················className="min-h-11"⏎··················onClick={handlePause}⏎················` with `·type="button"·variant="outline"·className="min-h-11"·onClick={handlePause}`  prettier/prettier
+  265:50  error  Replace `Escala·{String(spec.scale).replace(".",·",")}×` with `⏎··············Escala·{String(spec.scale).replace(".",·",")}×⏎············`                                                                                                                         prettier/prettier
+
+/dev-server/src/lib/app/practice-timer.ts
+  129:21  error  Replace `⏎······`timerForType:·spec·de·"${spec.id}"·não·corresponde·ao·tipo·"${type}"`,⏎····` with ``timerForType:·spec·de·"${spec.id}"·não·corresponde·ao·tipo·"${type}"``  prettier/prettier
+
+/dev-server/src/test/app/practice-timer.test.ts
+  140:17  error  Replace `⏎······timerForType("wfd",·findExamTaskSpec("read_aloud"),·BASE_PRACTICE),⏎····).toThrow(/não·corresponde/` with `·timerForType("wfd",·findExamTaskSpec("read_aloud"),·BASE_PRACTICE)).toThrow(⏎······/não·corresponde/,⏎····`  prettier/prettier
+  276:12  error  Replace `timerProgress({·phase:·"finished",·remainingMs:·0,·running:·false·},·describeImage)` with `⏎······timerProgress({·phase:·"finished",·remainingMs:·0,·running:·false·},·describeImage),⏎····`                                    prettier/prettier
+
+✖ 11 problems (11 errors, 0 warnings)
+  11 errors and 0 warnings potentially fixable with the `--fix` option.
+[0m
+[0m$ [0mbunx eslint --fix src/components/practice 'src/routes/praticar.$type.tsx' src/lib/app/practice-timer.ts src/test/app/practice-timer.test.ts 2>&1 | tail -20; echo "exit=$?"
+exit=0
+[0m
+[0m$ [0mbunx vitest run src/test/app/practice-timer.test.ts 2>&1 | tail -8; echo "=== tsgo ==="; bunx tsgo --noEmit 2>&1 | tail -10; echo "tsgo_exit=$?"
+RUN  v5.0.3 /dev-server
+
+
+ Test Files  1 passed (1)
+      Tests  46 passed (46)
+   Start at  20:49:19
+   Duration  921ms (environment 68%, transform 15%, setup 11%, import 3%, tests 3%, worker 1%)
+
+=== tsgo ===
+tsgo_exit=0
+[0m
+[0m$ [0mbunx tsgo --noEmit > /tmp/tsgo-s5.log 2>&1; code=$?; echo "tsgo exit=$code"; wc -l /tmp/tsgo-s5.log; cat /tmp/tsgo-s5.log
+tsgo exit=0
+0 /tmp/tsgo-s5.log
+[0m
+[0m$ [0msed -n '1,80p' src/lib/app/progress-client.ts
+/**
+ * Cliente do progresso local — uma conexão para todo o app (Fase 4, onda 0).
+ *
+ * Problema que resolve: `openProgressLayer()` abre IndexedDB e monta store,
+ * backup e mídia. Se cada componente abrisse a sua conexão, teríamos N conexões,
+ * N caches e risco de `onblocked` entre abas. Este módulo é o singleton
+ * browser-only que a UI consome.
+ *
+ * Regras (PRD central §4.5 e §10):
+ * - O progresso é 100% local e só existe no navegador. Em SSR não há IndexedDB:
+ *   `getProgressLayer()` rejeita com erro claro e `isProgressAvailable()` é
+ *   `false`. Componentes só chamam dentro de `useEffect`/eventos.
+ * - A Promise é a MESMA para todos os chamadores (evita corrida de abertura).
+ * - Falha não envenena o singleton: a próxima chamada tenta de novo.
+ * - Sem IndexedDB (navegador restrito), a UI degrada — nunca quebra a tela.
+ *
+ * `configureProgressClient` existe para testes (injeção de `fake-indexeddb` ou
+ * `null` para simular indisponibilidade) e para uma futura troca de nome do
+ * banco por implantação. Em produção nunca é chamado.
+ */
+
+import {
+  ProgressDbUnavailableError,
+  openProgressLayer,
+  type OpenProgressLayerOptions,
+  type ProgressLayer,
+} from "./index";
+
+export interface ProgressClientConfig {
+  /** nome do banco; ausente = `PROGRESS_DB_NAME` da Fase 3 */
+  dbName?: string;
+  /** fábrica injetável; `null` força indisponibilidade */
+  indexedDB?: IDBFactory | null;
+}
+
+let config: ProgressClientConfig = {};
+let layerPromise: Promise<ProgressLayer> | null = null;
+let resolvedLayer: ProgressLayer | null = null;
+
+function isBrowser(): boolean {
+  return typeof window !== "undefined";
+}
+
+/**
+ * Há como abrir o progresso agora?
+ *
+ * `false` em SSR, quando não existe `indexedDB` global ou quando o cliente foi
+ * configurado explicitamente como indisponível (`indexedDB: null`).
+ */
+export function isProgressAvailable(): boolean {
+  if (!isBrowser()) return false;
+  if (config.indexedDB === null) return false;
+  if (config.indexedDB !== undefined) return true;
+  return typeof globalThis.indexedDB !== "undefined";
+}
+
+/**
+ * Abre (ou reaproveita) a conexão única do progresso.
+ *
+ * Rejeita com `ProgressDbUnavailableError` em SSR e quando o navegador não tem
+ * IndexedDB — os consumidores tratam como estado degradado, não como crash.
+ */
+export function getProgressLayer(): Promise<ProgressLayer> {
+  if (!isBrowser()) {
+    return Promise.reject(
+      new ProgressDbUnavailableError(
+        "progresso local indisponível no servidor: abra dentro de useEffect/evento",
+      ),
+    );
+  }
+  if (layerPromise !== null) return layerPromise;
+  if (!isProgressAvailable()) {
+    return Promise.reject(
+      new ProgressDbUnavailableError(
+        "IndexedDB não está disponível neste navegador; o progresso não será gravado",
+      ),
+    );
+  }
+
+  const options: OpenProgressLayerOptions = {};
+[0m
+[0m$ [0mls -l --time-style=+%H:%M:%S src/routes/ajustes.tsx src/routeTree.gen.ts; git status --short | head -30
+-rw-r--r-- 1 root root 10405 20:48:52 src/routes/ajustes.tsx
+-rw-r--r-- 1 root root  7141 20:47:24 src/routeTree.gen.ts
+ M .opencode/work/sub/fase-4/s2-home/log-s2-home2.txt
+ M .opencode/work/sub/fase-4/s4-ajustes/log-s4-ajustes2.txt
+ M .opencode/work/sub/fase-4/s5-pratica/log-s5-pratica2.txt
+ M src/components/practice/engine-slot.tsx
+ M src/components/practice/spec-format.ts
+ M src/components/practice/task-spec-card.tsx
+ M src/components/practice/timer-bar.tsx
+ M src/components/settings/backup-section.tsx
+ M src/components/settings/format.ts
+ M src/components/settings/settings-sections.tsx
+ M src/components/settings/storage-section.tsx
+ M src/components/settings/ui.tsx
+ M src/lib/app/practice-timer.ts
+ M src/routeTree.gen.ts
+ M src/routes/ajustes.tsx
+ M src/routes/praticar.$type.tsx
+ M src/test/app/practice-timer.test.ts
+?? src/test/app/ajustes.test.ts
+[0m
+[0m$ [0mtouch src/routeTree.gen.ts; sleep 4; for p in /ajustes /praticar/wfd; do printf "%s -> " "$p"; curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:8080$p"; done; tail -4 /tmp/dev-server-logs/dev-server.log
+/ajustes -> 404
+/praticar/wfd -> 404
+8:45:44 PM [vite] (client) hmr update /src/styles.css?direct, /src/routes/index.tsx?tsr-split=component, /src/routes/index.tsx?tsr-split=component&t=1792529079
+8:45:44 PM [vite] (ssr) page reload src/lib/app/plano-do-dia.ts
+8:45:44 PM [vite] (client) hmr update /src/styles.css?direct, /src/routes/index.tsx, /src/routes/index.tsx?tsr-split=component, /src/routes/index.tsx?tsr-split=component&t=1792529079
+8:45:44 PM [vite] (ssr) page reload src/routes/index.tsx
+[0m
+[0m$ [0mls -la .opencode/work/sub/fase-4/s5-pratica/ 2>/dev/null; echo ---; head -20 .opencode/work/sub/fase-4/s5-pratica/log-s5-pratica2.txt 2>/dev/null
+total 288
+drwxr-xr-x 2 root root   4096 Oct 20 20:42 .
+drwxr-xr-x 7 root root   4096 Oct 20 20:39 ..
+-rw-r--r-- 1 root root 209326 Oct 20 20:49 log-s5-pratica2.txt
+-rw-r--r-- 1 root root  45793 Oct 20 20:39 log-s5-pratica.txt
+-rw-r--r-- 1 root root   3249 Oct 20 20:39 prd-project1-s5
+-rw-r--r-- 1 root root   1961 Oct 20 20:39 project1-s5
+-rw-r--r-- 1 root root    697 Oct 20 20:39 roadmap-proj1-s5
+-rw-r--r-- 1 root root      5 Oct 20 20:42 run-s5-pratica2.pid
+-rw-r--r-- 1 root root      5 Oct 20 20:39 run-s5-pratica.pid
+---
+[0m
+> sub-s5-pratica-f4 · deepseek-v4.1-flash-free
+[0m
+[0m$ [0mls -la /dev-server/src && echo "---DOMAIN---" && ls -la /dev-server/src/domain && echo "---DATA---" && ls -la /dev-server/src/data && echo "---LIB---" && ls -la /dev-server/src/lib && echo "---LIB/APP---" && ls -la /dev-server/src/lib/app && echo "---ROUTES---" && ls -la /dev-server/src/routes && echo "---COMPONENTS---" && ls -la /dev-server/src/components
+total 64
+drwxr-xr-x 9 root root 4096 Oct 20 20:39 .
+drwxr-xr-x 1 root root 4096 Oct 20 20:42 ..
+drwxr-xr-x 4 root root 4096 Oct 20 20:39 components
+drwxr-xr-x 4 root root 4096 Oct 20 20:39 data
+drwxr-xr-x 2 root root 4096 Oct 20 20:39 domain
+drwxr-xr-x 2 root root 4096 Oct 20 20:39 hooks
+drwxr-xr-x 3 root root 4096 Oct 20 20:39 lib
+-rw-r--r-- 1 root root  394 Oct 20 20:39 router.tsx
+drwxr-xr-x 3 root root 4096 Oct 20 20:39 routes
+-rw-r--r-- 1 root root 5785 Oct 20 20:39 routeTree.gen.ts
+-rw-r--r-- 1 root root 2048 Oct 20 20:39 server.ts
+-rw-r--r-- 1 root root  944 Oct 20 20:39 start.ts
+-rw-r--r-- 1 root root 3215 Oct 20 20:39 styles.css
+drwxr-xr-x 5 root root 4096 Oct 20 20:39 test
+---DOMAIN---
+[0m
+[0m$ [0mtail -60 log-s5-pratica.txt | sed 's/\x1b\[[0-9;]*m//g'
+name: "Listening: Highlight Incorrect Words",
+    namePt: "Escuta: destacar palavras incorretas",
+    scoredTasksInExam: [2, 3],
+    responseSeconds: "shared_section",
+    contentLimit: "Áudio de 15–50 segundos; transcrição com palavras divergentes",
+    scoredSkills: ["listening", "reading"],
+    notes: "+1 por palavra correta destacada e −1 por palavra errada. Pontua Listening e Reading.",
+  },
+  {
+    id: "wfd",
+    section: "listening",
+    name: "Listening: Write from Dictation",
+    namePt: "Escuta: escrever a partir do ditado",
+    scoredTasksInExam: [3, 4],
+    responseSeconds: "shared_section",
+    contentLimit: "Áudio de 3–5 segundos",
+    scoredSkills: ["listening", "writing"],
+    notes:
+      "+1 por palavra correta e escrita corretamente; sem penalidade por omissão. Pontua Listening e Writing.",
+  },
+];
+
+/* --------------------------------------------------------------------------------------------- */
+/* Blueprint do simulado completo                                                                */
+/* --------------------------------------------------------------------------------------------- */
+
+const SECTION_1_MINUTES = 76; // mínimo oficial de Speaking & Writing
+const SECTION_2_MINUTES = 23; // mínimo oficial de Reading
+const SECTION_3_MINUTES = 31; // mínimo oficial de Listening
+
+export const FULL_MOCK_BLUEPRINT: ExamBlueprint = {
+  id: "full-mock",
+  totalMinutes: SECTION_1_MINUTES + SECTION_2_MINUTES + SECTION_3_MINUTES,
+  sections: [
+    {
+      section: "speaking-writing",
+      minutes: SECTION_1_MINUTES,
+      tasks: [
+        { type: "read_aloud", count: 6 },
+        { type: "repeat_sentence", count: 10 },
+        { type: "describe_image", count: 5 },
+        { type: "retell_lecture", count: 2 },
+        { type: "answer_short", count: 5 },
+        { type: "sgd", count: 2 },
+        { type: "rts", count: 2 },
+        { type: "swt", count: 2 },
+        { type: "write_essay", count: 1 },
+      ],
+    },
+    {
+      section: "reading",
+      minutes: SECTION_2_MINUTES,
+      tasks: [
+        { type: "read_fib_dropdown", count: 5 },
+        { type: "read_mcq_multi", count: 2 },
+        { type: "reorder_paragraphs", count: 2 },
+        { type: "read_fib_drag", count: 4 },
+        { type: "read_mcq_single", count: 2 },
+
+Error: Upstream request failed: Endpoint is unavailable.
+[0m
+[0m✗ [0mRead .opencode/work/sub/fase-4/s5-pratica/prd-project1-s5 failed[90m [offset=55][0m
+[91m[1mError: [0mOffset 55 is out of range for this file (49 lines)
+[0m→ [0mRead .opencode/work/sub/fase-4/s5-pratica/prd-project1-s5[90m [offset=40][0m
+[0m
+[0m← [0mEdit .opencode/work/sub/fase-4/s5-pratica/prd-project1-s5
+Index: /dev-server/.opencode/work/sub/fase-4/s5-pratica/prd-project1-s5
+===================================================================
+--- /dev-server/.opencode/work/sub/fase-4/s5-pratica/prd-project1-s5
++++ /dev-server/.opencode/work/sub/fase-4/s5-pratica/prd-project1-s5
+@@ -45,5 +45,37 @@
+   `src/data/**`, `src/domain/**`, testes alheios, pilares centrais.
+ - Sem novas dependências.
+ 
+ ## Registro de decisões (preencha numerado)
+-1. —
++
++1. **`TimerSpec` aditivo.** Mantive os três campos exigidos (`preparationMs`, `responseMs`,
++   `adjustable`) e acrescentei `responseKind`, `enabled` e `scale` para a UI rotular com
++   honestidade o que está vendo (cronômetro desligado ≠ janela de áudio/seção). Campos
++   aditivos não quebram o contrato da Fase 6. Descartado: inferir o motivo na UI a partir
++   de `responseMs === null` (ambiguidade "desligado vs. tempo de seção").
++2. **`adjustable` só quando existe contagem.** `shared_section`/`until_audio` não ganham
++   botão/escala: sem contagem, "ajustar" seria mentira. `timersEnabled: false` também
++   zera `adjustable`, mantendo os tempos visíveis.
++3. **`timerForType` lança em par `type`/`spec` divergente** (erro de dados, não estado de
++   tela) e `examTaskSpecFor(raw)` devolve `null` para a fronteira de URL. A rota valida em
++   `beforeLoad` e responde 404 — nunca renderiza um tipo inventado.
++4. **Máquina de estados pura no lib** (`initialTimerState`/`startTimer`/`pauseTimer`/
++   `resetTimer`/`tickTimer`/`timerProgress`) alimentada por delta real de relógio
++   (`Date.now()` a cada 250 ms), não por "1 tick = 1 s". Aba em segundo plano não acelera
++   nem congela a contagem.
++5. **Cronômetro é demonstração rotulada.** Sem motor (Fase 6), a barra diz
++   "Demonstração" e explica que nada é tentativa avaliada. Descartado: esconder o timer
++   até a Fase 6 (perderia o contrato visual e o teste de tempos reais).
++6. **Ajustes lidos só em `useEffect`** via `getProgressLayer`/`readAppSettings`, com
++   `status` explícito (`loading`/`ready`/`unavailable`/`error`). Sem IndexedDB a tela
++   funciona com `DEFAULT_SETTINGS` e avisa que não leu os Ajustes — nunca finge.
++7. **Link para `/ajustes` condicional** com `useResolvedPath` (s4 é onda irmã): sem rota
++   registrada, nenhum link morto; com rota, o aluno chega ao controle de escala.
++8. **Rota em arquivo plano `src/routes/praticar.$type.tsx`** (mesmo path
++   `/praticar/$type`). A pasta `src/routes/praticar/` não era observada pelo watcher do
++   dev server desta sessão; o arquivo plano foi capturado pelo gerador. Nenhuma edição
++   manual de `routeTree.gen.ts`.
++9. **Ficha e head derivados do `exam-spec`** (`EXAM_TASKS`, `EXAM_META`,
++   `EXAM_SOURCES`): nenhum tempo, limite ou contagem digitado no componente. A data de
++   consulta das fontes aparece na ficha.
++10. **Componentes sem dependências novas**: `Badge`/`Button`/`Skeleton`/`lucide-react` já
++    existentes; nenhuma cor hardcoded (tokens `primary`, `warning`, `muted`, `card`).
+
+[0m
+[0m$ [0mcat > /tmp/s5-head-check.ts <<'EOF'
+import { Route } from "/dev-server/src/routes/praticar.$type";
+import { examTaskSpecFor } from "/dev-server/src/lib/app/practice-timer";
+
+const head = Route.options.head;
+if (!head) throw new Error("sem head");
+const valid = head({ params: { type: "wfd" } } as never) as { meta: Array<Record<string, string>> };
+const invalid = head({ params: { type: "nao_existe" } } as never) as { meta: Array<Record<string, string>> };
+console.log("valid title:", valid.meta.find((m) => "title" in m)?.title);
+console.log("valid description:", valid.meta.find((m) => m.name === "description")?.content?.slice(0, 80));
+console.log("invalid robots:", invalid.meta.find((m) => m.name === "robots")?.content);
+console.log("spec wfd:", examTaskSpecFor("wfd")?.namePt, "| spec inventado:", examTaskSpecFor("nao_existe"));
+EOF
+bun /tmp/s5-head-check.ts
+102 | /**
+103 |  * `eager: false` (padrão) é o ponto central: cada tipo vira um chunk separado e
+104 |  * só é baixado quando o aluno abre aquele tipo. Os valores são funções de import
+105 |  * dinâmico — é isso que os testes usam para provar que não há carga antecipada.
+106 |  */
+107 | const questionModules = import.meta.glob<QuestionChunk>("./bank/questions/*.json");
+                                          ^
+TypeError: import.meta.glob is not a function. (In 'import.meta.glob("./bank/questions/*.json")', 'import.meta.glob' is undefined)
+      at /dev-server/src/data/loader.ts:107:37
+
+Bun v1.3.14 (Linux x64)
+[0m
+[0m$ [0mcat > src/test/app/__tmp-pratica-route.test.ts <<'EOF'
+import { describe, expect, it } from "vitest";
+
+import { Route } from "@/routes/praticar.$type";
+
+type HeadFn = (arg: { params: { type: string } }) => {
+  meta: Array<Record<string, string>>;
+};
+
+const head = Route.options.head as unknown as HeadFn;
+const beforeLoad = Route.options.beforeLoad as unknown as (arg: {
+  params: { type: string };
+}) => unknown;
+
+describe("rota /praticar/$type — verificação temporária", () => {
+  it("head válido descreve o tipo e a seção", () => {
+    const result = head({ params: { type: "wfd" } });
+    const title = result.meta.find((m) => "title" in m)?.["title"];
+    const description = result.meta.find((m) => m["name"] === "description")?.["content"] ?? "";
+    expect(title).toContain("Escuta: escrever a partir do ditado");
+    expect(description).toContain("Listening");
+    expect(result.meta.some((m) => m["name"] === "robots")).toBe(false);
+  });
+
+  it("head de tipo inventado é noindex e não promete página", () => {
+    const result = head({ params: { type: "nao_existe" } });
+    expect(result.meta.find((m) => m["name"] === "robots")?.["content"]).toBe("noindex");
+  });
+
+  it("beforeLoad aceita os 22 tipos e rejeita slug inventado", () => {
+    for (const type of [
+      "read_aloud", "repeat_sentence", "describe_image", "retell_lecture", "answer_short",
+      "sgd", "rts", "swt", "write_essay", "read_fib_dropdown", "read_mcq_multi",
+      "reorder_paragraphs", "read_fib_drag", "read_mcq_single", "sst", "lst_mcq_multi",
+      "lst_fib", "lst_hcs", "lst_mcq_single", "lst_smw", "lst_hiw", "wfd",
+    ]) {
+      expect(() => beforeLoad({ params: { type } })).not.toThrow();
+    }
+    expect(() => beforeLoad({ params: { type: "nao_existe" } })).toThrow();
+    expect(() => beforeLoad({ params: { type: "" } })).toThrow();
+  });
+});
+EOF
+bunx vitest run src/test/app/__tmp-pratica-route.test.ts 2>&1 | tail -20
+RUN  v5.0.3 /dev-server
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  20:50:16
+   Duration  1000ms (environment 50%, transform 25%, import 17%, setup 8%, worker 1%, tests 1%)
+[0m
+[0m$ [0msed -n '1,55p' src/test/app/practice-timer.test.ts; echo ...; tail -20 src/test/app/practice-timer.test.ts
+/**
+ * Testes do cronômetro de treino por tipo (F4.4.1 — s5-pratica).
+ *
+ * O que este arquivo prova:
+ *
+ * 1. Todo tipo do contrato (`TASK_TYPES`) tem spec no `exam-spec`, com seção coerente —
+ *    o shell de prática não pode receber um tipo sem formato oficial.
+ * 2. A conversão usa os tempos REAIS de `EXAM_TASKS` (não constantes digitadas): os
+ *    casos cobertos são os quatro formatos que existem — preparação + resposta fixa,
+ *    resposta fixa sem preparação, `until_audio` e `shared_section`.
+ * 3. `shared_section`/`until_audio` produzem `responseMs: null` e um `responseKind`
+ *    honesto — nunca um número inventado (ex.: "0 s").
+ * 4. A escala de treino (1×/1,5×/2×) multiplica preparação e resposta.
+ * 5. `timersEnabled: false` desliga a contagem (`adjustable: false`, `enabled: false`)
+ *    sem apagar os tempos exibidos.
+ * 6. A máquina de estados é determinística: preparação → resposta → fim, pausa não
+ *    perde tempo, reiniciar volta ao começo e tipo sem contagem fica `unavailable`.
+ * 7. A formatação pt-BR é estável e legível.
+ *
+ * Nenhum número do banco de questões é usado: aqui só existem tempos do formato oficial.
+ */
+
+import { describe, expect, it } from "vitest";
+
+import { EXAM_TASKS } from "@/data/exam-spec";
+import { SECTION_BY_TYPE, TASK_TYPES, type TaskType } from "@/domain";
+import type { AppSettings } from "@/lib/app/settings";
+import {
+  examTaskSpecFor,
+  findExamTaskSpec,
+  formatCountdown,
+  formatDuration,
+  hasCountdown,
+  initialTimerState,
+  pauseTimer,
+  resetTimer,
+  startTimer,
+  startsIn,
+  tickTimer,
+  timerForType,
+  timerProgress,
+  type TimerSpec,
+} from "@/lib/app/practice-timer";
+
+const BASE_PRACTICE: AppSettings["practice"] = { timersEnabled: true, timerScale: 1 };
+
+function timer(type: TaskType, practice: AppSettings["practice"] = BASE_PRACTICE): TimerSpec {
+  return timerForType(type, findExamTaskSpec(type), practice);
+}
+
+/* ------------------------------------------------------------------ */
+/* Contrato com o exam-spec                                           */
+/* ------------------------------------------------------------------ */
+
+describe("exam-spec — todo tipo do domínio tem formato oficial", () => {
+...
+/* Formatação                                                         */
+/* ------------------------------------------------------------------ */
+
+describe("formatação de duração", () => {
+  it("segundos, minutos exatos e minutos + segundos", () => {
+    expect(formatDuration(0)).toBe("0 s");
+    expect(formatDuration(15_000)).toBe("15 s");
+    expect(formatDuration(60_000)).toBe("1 min");
+    expect(formatDuration(90_000)).toBe("1 min 30 s");
+    expect(formatDuration(600_000)).toBe("10 min");
+    expect(formatDuration(1_200_000)).toBe("20 min");
+  });
+
+  it("contagem regressiva arredonda para cima (não zera antes do fim)", () => {
+    expect(formatCountdown(1)).toBe("1 s");
+    expect(formatCountdown(900)).toBe("1 s");
+    expect(formatCountdown(0)).toBe("0 s");
+    expect(formatCountdown(-10)).toBe("0 s");
+  });
+});
+[0m
+[0m← [0mEdit src/test/app/practice-timer.test.ts
+Index: /dev-server/src/test/app/practice-timer.test.ts
+===================================================================
+--- /dev-server/src/test/app/practice-timer.test.ts
++++ /dev-server/src/test/app/practice-timer.test.ts
+@@ -15,15 +15,18 @@
+  *    sem apagar os tempos exibidos.
+  * 6. A máquina de estados é determinística: preparação → resposta → fim, pausa não
+  *    perde tempo, reiniciar volta ao começo e tipo sem contagem fica `unavailable`.
+  * 7. A formatação pt-BR é estável e legível.
++ * 8. O contrato da rota `/praticar/$type`: `head()` por tipo e 404 para slug inventado
++ *    (`beforeLoad`), sem depender de servidor de preview.
+  *
+  * Nenhum número do banco de questões é usado: aqui só existem tempos do formato oficial.
+  */
+ 
+ import { describe, expect, it } from "vitest";
+ 
+ import { EXAM_TASKS } from "@/data/exam-spec";
++import { Route } from "@/routes/praticar.$type";
+ import { SECTION_BY_TYPE, TASK_TYPES, type TaskType } from "@/domain";
+ import type { AppSettings } from "@/lib/app/settings";
+ import {
+   examTaskSpecFor,
+
+[0m
+[0m$ [0mcat >> src/test/app/practice-timer.test.ts <<'EOF'
+
+/* ------------------------------------------------------------------ */
+/* Contrato da rota /praticar/$type                                   */
+/* ------------------------------------------------------------------ */
+
+type RouteHead = (arg: { params: { type: string } }) => {
+  meta: Array<Record<string, string>>;
+};
+type RouteBeforeLoad = (arg: { params: { type: string } }) => unknown;
+
+const routeHead = Route.options.head as unknown as RouteHead;
+const routeBeforeLoad = Route.options.beforeLoad as unknown as RouteBeforeLoad;
+
+describe("rota /praticar/$type — head e validação do parâmetro", () => {
+  it("head válido descreve o tipo e a seção, sem noindex", () => {
+    const result = routeHead({ params: { type: "wfd" } });
+    const title = result.meta.find((meta) => "title" in meta)?.["title"];
+    const description = result.meta.find((meta) => meta["name"] === "description")?.["content"] ?? "";
+
+    expect(title).toContain(findExamTaskSpec("wfd").namePt);
+    expect(description).toContain("Listening");
+    expect(result.meta.some((meta) => meta["name"] === "robots")).toBe(false);
+  });
+
+  it("head de tipo inventado é noindex (não anuncia página que não existe)", () => {
+    const result = routeHead({ params: { type: "nao_existe" } });
+    expect(result.meta.find((meta) => meta["name"] === "robots")?.["content"]).toBe("noindex");
+  });
+
+  it("beforeLoad aceita os 22 tipos e rejeita slug inventado ou vazio", () => {
+    for (const type of TASK_TYPES) {
+      expect(() => routeBeforeLoad({ params: { type } })).not.toThrow();
+    }
+    expect(() => routeBeforeLoad({ params: { type: "nao_existe" } })).toThrow();
+    expect(() => routeBeforeLoad({ params: { type: "" } })).toThrow();
+  });
+});
+EOF
+rm src/test/app/__tmp-pratica-route.test.ts
+bunx eslint --fix src/test/app/practice-timer.test.ts >/dev/null 2>&1; bunx vitest run src/test/app/practice-timer.test.ts 2>&1 | tail -8
+RUN  v5.0.3 /dev-server
+
+
+ Test Files  1 passed (1)
+      Tests  49 passed (49)
+   Start at  20:50:33
+   Duration  1.14s (environment 49%, transform 25%, import 16%, setup 8%, tests 1%, worker 1%)
+[0m
+[0m$ [0mbunx tsgo --noEmit > /tmp/tsgo-s5.log 2>&1; echo "tsgo exit=$?"; cat /tmp/tsgo-s5.log; echo "=== eslint ==="; bunx eslint src/components/practice 'src/routes/praticar.$type.tsx' src/lib/app/practice-timer.ts src/test/app/practice-timer.test.ts > /tmp/eslint-s5.log 2>&1; echo "eslint exit=$?"; tail -5 /tmp/eslint-s5.log
+tsgo exit=0
+=== eslint ===
+eslint exit=0
+[0m
+[0m$ [0mbunx vitest run 2>&1 | tail -8
+Tests  388 passed (388)
+   Start at  20:50:41
+   Duration  5.03s (environment 59%, transform 14%, setup 11%, tests 10%, import 6%, worker 1%)
+
+Environment  jsdom was created 26 times · 17.44s total, 59% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+[0m
+[0m$ [0mwc -l src/lib/app/practice-timer.ts src/test/app/practice-timer.test.ts src/components/practice/*.ts* 'src/routes/praticar.$type.tsx'; echo ---; grep -n "praticar/\$type" src/routeTree.gen.ts | head -3
+264 src/lib/app/practice-timer.ts
+  343 src/test/app/practice-timer.test.ts
+   85 src/components/practice/engine-slot.tsx
+    9 src/components/practice/index.ts
+   79 src/components/practice/spec-format.ts
+   96 src/components/practice/task-header.tsx
+  150 src/components/practice/task-spec-card.tsx
+  309 src/components/practice/timer-bar.tsx
+   58 src/components/practice/use-practice-settings.ts
+  133 src/routes/praticar.$type.tsx
+ 1526 total
+---
+53:  id: '/praticar/$type',
+54:  path: '/praticar/$type',
+75:  '/praticar/$type': typeof PraticarTypeRoute
+[0m

@@ -9,14 +9,15 @@
 import { HardDrive, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  QUOTA_CRITICAL_RATIO,
-  QUOTA_WARN_RATIO,
-  type QuotaEstimate,
-  type QuotaLevel,
-} from "@/lib/app/media";
+import type { QuotaEstimate } from "@/lib/app/media";
 
-import { formatBytes, formatPercent, quotaLevelAdvice, quotaLevelLabel } from "./format";
+import {
+  formatBytes,
+  formatPercent,
+  levelFromEstimate,
+  quotaLevelAdvice,
+  quotaLevelLabel,
+} from "./format";
 import { InlineNote, SettingsSection, StatusPill } from "./ui";
 
 export interface StorageSectionProps {
@@ -27,14 +28,12 @@ export interface StorageSectionProps {
   onRefresh: () => void;
 }
 
-export function levelFromEstimate(estimate: QuotaEstimate | null): QuotaLevel {
-  if (estimate === null) return "unknown";
-  if (estimate.ratio >= QUOTA_CRITICAL_RATIO) return "critical";
-  if (estimate.ratio >= QUOTA_WARN_RATIO) return "warn";
-  return "ok";
-}
-
-export function StorageSection({ quota, recordingsBytes, loading, onRefresh }: StorageSectionProps) {
+export function StorageSection({
+  quota,
+  recordingsBytes,
+  loading,
+  onRefresh,
+}: StorageSectionProps) {
   const level = levelFromEstimate(quota);
   const percent = quota === null ? 0 : Math.min(100, Math.round(quota.ratio * 100));
 
@@ -44,7 +43,11 @@ export function StorageSection({ quota, recordingsBytes, loading, onRefresh }: S
       icon={HardDrive}
       title="Armazenamento neste dispositivo"
       description="O progresso, os ajustes e as gravações de fala ficam no armazenamento do seu navegador. Este painel só informa — nada é apagado por aqui."
-      aside={<StatusPill tone={level === "ok" ? "success" : level === "unknown" ? "neutral" : "warning"}>{quotaLevelLabel(level)}</StatusPill>}
+      aside={
+        <StatusPill tone={level === "ok" ? "success" : level === "unknown" ? "neutral" : "warning"}>
+          {quotaLevelLabel(level)}
+        </StatusPill>
+      }
     >
       {quota === null ? (
         <p className="text-sm text-muted-foreground">
@@ -58,7 +61,9 @@ export function StorageSection({ quota, recordingsBytes, loading, onRefresh }: S
             <span className="tabular-nums">
               {formatBytes(quota.usage)} de {formatBytes(quota.quota)} usados
             </span>
-            <span className="text-xs tabular-nums text-muted-foreground">{formatPercent(quota.ratio)}</span>
+            <span className="text-xs tabular-nums text-muted-foreground">
+              {formatPercent(quota.ratio)}
+            </span>
           </div>
           <div
             role="progressbar"
@@ -91,7 +96,8 @@ export function StorageSection({ quota, recordingsBytes, loading, onRefresh }: S
           {loading ? "Atualizando…" : "Atualizar informação"}
         </Button>
         <p className="text-xs text-muted-foreground">
-          Gravações de áudio: {recordingsBytes === null ? "não medidas" : formatBytes(recordingsBytes)}
+          Gravações de áudio:{" "}
+          {recordingsBytes === null ? "não medidas" : formatBytes(recordingsBytes)}
         </p>
       </div>
 

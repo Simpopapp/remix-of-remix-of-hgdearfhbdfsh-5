@@ -101,9 +101,9 @@ export function TaskSpecCard({ spec, entry }: TaskSpecCardProps) {
         <p className="mt-4 flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs leading-relaxed text-muted-foreground">
           <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-warning" aria-hidden="true" />
           <span>
-            A matriz oficial tarefa×habilidade não é inequívoca para este tipo. As habilidades
-            acima são uma aproximação declarada — pesos de estimativa (Fase 8) nunca serão
-            apresentados como fato da Pearson.
+            A matriz oficial tarefa×habilidade não é inequívoca para este tipo. As habilidades acima
+            são uma aproximação declarada — pesos de estimativa (Fase 8) nunca serão apresentados
+            como fato da Pearson.
           </span>
         </p>
       ) : null}

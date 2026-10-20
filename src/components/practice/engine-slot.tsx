@@ -49,9 +49,9 @@ export function PracticeEngineSlot({ type, namePt, entry }: PracticeEngineSlotPr
           de prática (Fase 6).
         </p>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Nada é simulado nesta tela: sem motor não há pergunta, gravação, envio nem avaliação.
-          Esta página já traz o formato oficial do tipo, a contagem de itens do banco e o
-          cronômetro de demonstração.
+          Nada é simulado nesta tela: sem motor não há pergunta, gravação, envio nem avaliação. Esta
+          página já traz o formato oficial do tipo, a contagem de itens do banco e o cronômetro de
+          demonstração.
         </p>
 
         {hasContent ? (
