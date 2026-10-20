@@ -40,8 +40,15 @@ import type { AppSettings } from "./settings";
 /** Teto de itens do plano (PRD §F4.1). */
 export const DAY_PLAN_MAX_ITEMS = 4;
 
-/** Rótulos das seções do exame (interface em pt-BR; nomes oficiais em inglês). */
-export const SECTION_LABELS: Record<Section, string> = {
+/**
+ * Nomes das seções usados no texto do plano (nomes oficiais em inglês; a
+ * interface é pt-BR no resto das frases).
+ *
+ * Não reutiliza `SECTION_LABELS` de `catalogo.ts` de propósito: aquele mapa é
+ * do catálogo (com descrições longas) e o plano precisa só do nome curto. Nomes
+ * diferentes evitam ambiguidade entre os dois módulos.
+ */
+export const SECTION_DISPLAY_NAMES: Record<Section, string> = {
   speaking: "Speaking",
   writing: "Writing",
   reading: "Reading",
@@ -125,7 +132,7 @@ function reviewItem(dueCount: number): DayPlanItem {
 }
 
 function exploreItem(section: Section): DayPlanItem {
-  const label = SECTION_LABELS[section];
+  const label = SECTION_DISPLAY_NAMES[section];
   return {
     kind: "explore",
     title: `Explorar ${label}`,
@@ -162,7 +169,7 @@ function metaItem(settings: AppSettings, todayKey: string): DayPlanItem | null {
 }
 
 function continueItem(section: Section, attempts: number): DayPlanItem {
-  const label = SECTION_LABELS[section];
+  const label = SECTION_DISPLAY_NAMES[section];
   const plural = attempts === 1 ? "tentativa registrada" : "tentativas registradas";
   return {
     kind: "practice",

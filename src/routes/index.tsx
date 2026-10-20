@@ -49,7 +49,7 @@ import {
 } from "@/domain";
 import { REVIEW_STATUS_EVENT } from "@/hooks/use-review-status";
 import {
-  SECTION_LABELS,
+  SECTION_DISPLAY_NAMES,
   buildDayPlan,
   practiceBySectionFromSnapshots,
   totalPracticeAttempts,
@@ -198,12 +198,22 @@ function InlineDestination({ href, children }: { href: string; children: ReactNo
   );
 }
 
+/** Selo honesto para destino cuja rota ainda não foi entregue nesta onda. */
+function ComingSoonChip() {
+  return (
+    <span className="rounded-full border border-dashed border-border/70 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+      Em breve
+    </span>
+  );
+}
+
 function PlanRow({ item }: { item: DayPlanItem }) {
   const resolved = useResolvedPath(item.href);
   const meta = KIND_META[item.kind];
   const Icon = meta.icon;
+  const unavailable = resolved === null;
 
-  const content = (
+  const body = (
     <>
       <span
         className={cn(
@@ -220,6 +230,7 @@ function PlanRow({ item }: { item: DayPlanItem }) {
           <span className="rounded-full border border-border/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
             {meta.label}
           </span>
+          {unavailable && <ComingSoonChip />}
         </span>
         <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
           {item.description}
@@ -228,16 +239,13 @@ function PlanRow({ item }: { item: DayPlanItem }) {
     </>
   );
 
-  if (resolved === null) {
+  if (unavailable) {
     return (
       <div
         aria-disabled="true"
         className="flex min-h-16 items-start gap-3 rounded-xl border border-dashed border-border/60 bg-card/20 p-4 opacity-70"
       >
-        {content}
-        <span className="mt-1 shrink-0 self-center text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-          Em breve
-        </span>
+        {body}
       </div>
     );
   }
@@ -247,7 +255,7 @@ function PlanRow({ item }: { item: DayPlanItem }) {
       to={resolved}
       className="group flex min-h-16 items-start gap-3 rounded-xl border border-border/60 bg-card/40 p-4 transition-colors hover:border-primary/40 hover:bg-card/70"
     >
-      {content}
+      {body}
       <ChevronRight
         className="mt-1 size-4 shrink-0 self-center text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary"
         aria-hidden="true"
@@ -259,6 +267,7 @@ function PlanRow({ item }: { item: DayPlanItem }) {
 function ShortcutCard({ shortcut }: { shortcut: Shortcut }) {
   const resolved = useResolvedPath(shortcut.href);
   const Icon = shortcut.icon;
+  const unavailable = resolved === null;
 
   const body = (
     <>
@@ -266,7 +275,10 @@ function ShortcutCard({ shortcut }: { shortcut: Shortcut }) {
         <Icon className="size-4" aria-hidden="true" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium text-foreground">{shortcut.label}</span>
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="text-sm font-medium text-foreground">{shortcut.label}</span>
+          {unavailable && <ComingSoonChip />}
+        </span>
         <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
           {shortcut.description}
         </span>
@@ -274,16 +286,13 @@ function ShortcutCard({ shortcut }: { shortcut: Shortcut }) {
     </>
   );
 
-  if (resolved === null) {
+  if (unavailable) {
     return (
       <div
         aria-disabled="true"
         className="flex min-h-24 items-start gap-3 rounded-xl border border-dashed border-border/60 bg-card/20 p-4 opacity-70"
       >
         {body}
-        <span className="self-center text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-          Em breve
-        </span>
       </div>
     );
   }
@@ -316,6 +325,15 @@ function HomePage() {
   const [state, setState] = useState<LocalState>({ status: "loading" });
   const [reloadToken, setReloadToken] = useState(0);
   const retry = useCallback(() => setReloadToken((token) => token + 1), []);
+
+  // Saudação por hora local. Nasce neutra ("Olá") para o SSR e a hidratação
+  // produzirem o MESMO HTML; só depois de montar é que a hora do dispositivo
+  // entra — nunca um `new Date()` no render.
+  const [greeting, setGreeting] = useState("Olá");
+  useEffect(() => {
+    const hour = new Date().getHours();
+    setGreeting(hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite");
+  }, []);
 
   const manifest = useQuery({
     queryKey: ["bank", "manifest"],
@@ -399,7 +417,7 @@ function HomePage() {
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-3">
         <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-primary">
-          PTE Academic · preparo diário
+          {greeting} · PTE Academic · preparo diário
         </p>
         <h1 className="font-serif text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           Seu plano de hoje
@@ -410,7 +428,7 @@ function HomePage() {
         </p>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-start">
         {/* Plano do dia */}
         <section
           aria-labelledby="plano-do-dia"
@@ -679,7 +697,7 @@ function HomePage() {
       </section>
 
       <p className="text-center text-xs leading-relaxed text-muted-foreground">
-        {SECTIONS.map((section) => SECTION_LABELS[section]).join(" · ")} — os quatro domínios do PTE
+        {SECTIONS.map((section) => SECTION_DISPLAY_NAMES[section]).join(" · ")} — os quatro domínios do PTE
         Academic. As notas do app são estimativas de treino, nunca a nota oficial.
       </p>
     </div>

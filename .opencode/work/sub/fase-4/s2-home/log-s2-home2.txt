@@ -49,3 +49,1568 @@ drwxr-xr-x 5 root root  4096 Oct 20 20:39 ..
 -rw-r--r-- 1 root root  4890 Oct 20 20:39 timezone.test.ts
 [0m
 [0m→ [0mRead src/lib/app/plano-do-dia.ts
+[0m→ [0mRead src/test/app/plano-do-dia.test.ts
+[0m→ [0mRead src/lib/app/settings.ts
+[0m→ [0mRead src/routes/index.tsx
+[0m
+[0m$ [0mcd /dev-server && ls src/components/layout/ src/hooks/ src/data/ 2>&1; echo '---'; cat src/lib/app/progress-client.ts
+src/components/layout/:
+app-shell.tsx
+coming-soon.tsx
+internal-link.tsx
+nav-items.ts
+nav-link.tsx
+review-badge.tsx
+use-resolved-path.ts
+
+src/data/:
+bank
+exam-spec.ts
+generated
+loader.ts
+
+src/hooks/:
+use-mobile.tsx
+use-review-status.ts
+---
+/**
+ * Cliente do progresso local — uma conexão para todo o app (Fase 4, onda 0).
+ *
+ * Problema que resolve: `openProgressLayer()` abre IndexedDB e monta store,
+ * backup e mídia. Se cada componente abrisse a sua conexão, teríamos N conexões,
+ * N caches e risco de `onblocked` entre abas. Este módulo é o singleton
+ * browser-only que a UI consome.
+ *
+ * Regras (PRD central §4.5 e §10):
+ * - O progresso é 100% local e só existe no navegador. Em SSR não há IndexedDB:
+ *   `getProgressLayer()` rejeita com erro claro e `isProgressAvailable()` é
+ *   `false`. Componentes só chamam dentro de `useEffect`/eventos.
+ * - A Promise é a MESMA para todos os chamadores (evita corrida de abertura).
+ * - Falha não envenena o singleton: a próxima chamada tenta de novo.
+ * - Sem IndexedDB (navegador restrito), a UI degrada — nunca quebra a tela.
+ *
+ * `configureProgressClient` existe para testes (injeção de `fake-indexeddb` ou
+ * `null` para simular indisponibilidade) e para uma futura troca de nome do
+ * banco por implantação. Em produção nunca é chamado.
+ */
+
+import {
+  ProgressDbUnavailableError,
+  openProgressLayer,
+  type OpenProgressLayerOptions,
+  type ProgressLayer,
+} from "./index";
+
+export interface ProgressClientConfig {
+  /** nome do banco; ausente = `PROGRESS_DB_NAME` da Fase 3 */
+  dbName?: string;
+  /** fábrica injetável; `null` força indisponibilidade */
+  indexedDB?: IDBFactory | null;
+}
+
+let config: ProgressClientConfig = {};
+let layerPromise: Promise<ProgressLayer> | null = null;
+let resolvedLayer: ProgressLayer | null = null;
+
+function isBrowser(): boolean {
+  return typeof window !== "undefined";
+}
+
+/**
+ * Há como abrir o progresso agora?
+ *
+ * `false` em SSR, quando não existe `indexedDB` global ou quando o cliente foi
+ * configurado explicitamente como indisponível (`indexedDB: null`).
+ */
+export function isProgressAvailable(): boolean {
+  if (!isBrowser()) return false;
+  if (config.indexedDB === null) return false;
+  if (config.indexedDB !== undefined) return true;
+  return typeof globalThis.indexedDB !== "undefined";
+}
+
+/**
+ * Abre (ou reaproveita) a conexão única do progresso.
+ *
+ * Rejeita com `ProgressDbUnavailableError` em SSR e quando o navegador não tem
+ * IndexedDB — os consumidores tratam como estado degradado, não como crash.
+ */
+export function getProgressLayer(): Promise<ProgressLayer> {
+  if (!isBrowser()) {
+    return Promise.reject(
+      new ProgressDbUnavailableError(
+        "progresso local indisponível no servidor: abra dentro de useEffect/evento",
+      ),
+    );
+  }
+  if (layerPromise !== null) return layerPromise;
+  if (!isProgressAvailable()) {
+    return Promise.reject(
+      new ProgressDbUnavailableError(
+        "IndexedDB não está disponível neste navegador; o progresso não será gravado",
+      ),
+    );
+  }
+
+  const options: OpenProgressLayerOptions = {};
+  if (config.dbName !== undefined) options.dbName = config.dbName;
+  if (config.indexedDB !== undefined) options.indexedDB = config.indexedDB;
+
+  let pending: Promise<ProgressLayer>;
+  pending = openProgressLayer(options)
+    .then((layer) => {
+      resolvedLayer = layer;
+      return layer;
+    })
+    .catch((error: unknown) => {
+      // Não envenena o singleton: uma nova tentativa pode dar certo.
+      if (layerPromise === pending) layerPromise = null;
+      throw error;
+    });
+
+  layerPromise = pending;
+  return pending;
+}
+
+/**
+ * Acesso síncrono à camada já aberta (para handlers que não podem esperar).
+ * `null` antes da primeira abertura bem-sucedida.
+ */
+export function peekProgressLayer(): ProgressLayer | null {
+  return resolvedLayer;
+}
+
+/**
+ * Fecha e esquece a conexão. Usado por testes e por um eventual "apagar tudo"
+ * explícito do aluno; nenhuma migração chama isto sozinha.
+ */
+export async function closeProgressLayer(): Promise<void> {
+  const pending = layerPromise;
+  layerPromise = null;
+  resolvedLayer = null;
+  if (pending === null) return;
+  try {
+    const layer = await pending;
+    layer.close();
+  } catch {
+    // Já estava indisponível: não há o que fechar.
+  }
+}
+
+/** Reconfigura o cliente (testes/injeção). Fecha a conexão anterior se houver. */
+export function configureProgressClient(next: ProgressClientConfig = {}): void {
+  void closeProgressLayer();
+  config = { ...next };
+}
+
+/** Volta ao estado inicial (somente testes). */
+export function resetProgressClient(): void {
+  void closeProgressLayer();
+  config = {};
+}
+[0m
+[0m$ [0mcd /dev-server && timeout 600 bunx vitest run src/test/app/plano-do-dia.test.ts 2>&1 | tail -40
+RUN  v5.0.3 /dev-server
+
+
+ Test Files  1 passed (1)
+      Tests  22 passed (22)
+   Start at  20:42:29
+   Duration  803ms (environment 68%, transform 16%, setup 11%, import 3%, tests 1%, worker 1%)
+[0m
+[0m$ [0mcd /dev-server && cat src/components/layout/internal-link.tsx src/components/layout/use-resolved-path.ts src/hooks/use-review-status.ts
+/**
+ * Link interno que resolve o caminho contra o route tree em runtime.
+ *
+ * Existe um único cast (`Link` → componente de `to: string`) porque a rota de
+ * destino chega em outra onda e ainda não está no union type gerado. O cast é
+ * seguro no ponto de uso: o `href` só é passado depois de
+ * `useResolvedPath()` confirmar que a rota está registrada — nunca navegamos
+ * para um caminho inventado.
+ */
+
+import { Link } from "@tanstack/react-router";
+import type { ComponentType, MouseEvent, ReactNode } from "react";
+
+import { useResolvedPath } from "./use-resolved-path";
+
+export interface InternalLinkProps {
+  /** caminho desejado; resolvido para a rota registrada (com/sem barra final) */
+  to: string;
+  className?: string;
+  children?: ReactNode;
+  title?: string;
+  "aria-label"?: string;
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
+}
+
+interface DynamicLinkProps {
+  to: string;
+  className?: string;
+  children?: ReactNode;
+  title?: string;
+  "aria-label"?: string;
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
+}
+
+const DynamicLink = Link as unknown as ComponentType<DynamicLinkProps>;
+
+/**
+ * Renderiza um `Link` do router se o destino existir; caso contrário, `null`.
+ * Para um item de menu com estado "em breve", use `NavLink` (não este).
+ */
+export function InternalLink({ to, ...rest }: InternalLinkProps) {
+  const resolved = useResolvedPath(to);
+  if (resolved === null) return null;
+  return <DynamicLink to={resolved} {...rest} />;
+}
+/**
+ * Resolve se um caminho de navegação existe no route tree ATUAL.
+ *
+ * Por que isso existe: a navegação da Fase 4 aponta para rotas que chegam em
+ * ondas diferentes (Catálogo, Ajustes, Prática). Em vez de espalhar links
+ * quebrados ou `<a href>` (proibido para rotas internas), o menu pergunta ao
+ * router o que já está registrado: rota ausente vira item honesto "em breve",
+ * rota presente vira `Link` tipado em runtime. Assim nenhum pacote precisa
+ * editar o layout para "ligar" o próprio item.
+ *
+ * O route tree é estático (gerado no build), então o resultado é o mesmo no
+ * servidor e no cliente — sem mismatch de hidratação.
+ */
+
+import { useRouter } from "@tanstack/react-router";
+
+type RouteLike = { fullPath?: unknown } | undefined;
+
+/**
+ * Caminho registrado para `path`, tentando também a variante com barra final
+ * (`/sessoes` ↔ `/sessoes/`), que é como rotas de diretório aparecem no tree.
+ */
+export function resolveRegisteredPath(routesByPath: unknown, path: string): string | null {
+  if (typeof routesByPath !== "object" || routesByPath === null) return null;
+  const routes = routesByPath as Record<string, RouteLike>;
+  const candidates = path === "/" ? ["/"] : [path, `${path}/`];
+  for (const candidate of candidates) {
+    const route = routes[candidate];
+    if (route === undefined) continue;
+    const fullPath = route.fullPath;
+    return typeof fullPath === "string" && fullPath.length > 0 ? fullPath : candidate;
+  }
+  return null;
+}
+
+/** Versão React: caminho registrado agora, ou `null` (rota ainda não existe). */
+export function useResolvedPath(path: string): string | null {
+  const router = useRouter();
+  return resolveRegisteredPath(router.routesByPath, path);
+}
+
+/** Normaliza para comparação (barra final não muda a rota). */
+export function normalizePathname(pathname: string): string {
+  if (pathname.length > 1 && pathname.endsWith("/")) return pathname.slice(0, -1);
+  return pathname;
+}
+
+/** `true` quando `pathname` é a rota ou uma rota filha dela. */
+export function isPathActive(pathname: string, href: string): boolean {
+  const current = normalizePathname(pathname);
+  const target = normalizePathname(href);
+  if (current === target) return true;
+  if (target === "/") return false;
+  return current.startsWith(`${target}/`);
+}
+/**
+ * Badge global da fila de revisão (Fase 4, onda 0).
+ *
+ * Contrato (PRD central §9): o contador de revisões vencidas é visível em TODAS
+ * as telas. A fonte é o SRS da Fase 3 (`store.getDueSnapshots(diaLocal)`), nunca
+ * uma contagem paralela.
+ *
+ * Regras de honestidade:
+ * - Enquanto o número é desconhecido, `dueCount` é `null` — a UI não mostra "0"
+ *   falso (era exatamente esse o defeito que o PRD proíbe).
+ * - Sem IndexedDB/SSR o badge some (`available: false`), sem quebrar a página.
+ * - Falha de leitura vira `error: true` e o badge é ocultado — nunca um número
+ *   inventado.
+ *
+ * Atualização: recarrega ao voltar o foco, ao reabrir a aba e quando qualquer
+ * parte do app chamar `notifyReviewStatusChanged()` (ex.: após enviar uma
+ * tentativa ou importar um backup).
+ */
+
+import { useCallback, useEffect, useState } from "react";
+
+import { localDayKey } from "@/domain";
+import { getProgressLayer, isProgressAvailable } from "@/lib/app/progress-client";
+
+/** Evento global de "o progresso mudou, revalide a fila". */
+export const REVIEW_STATUS_EVENT = "pte:review-status-changed";
+
+/** Dispara a revalidação do badge (e de qualquer outra tela inscrita). */
+export function notifyReviewStatusChanged(): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(REVIEW_STATUS_EVENT));
+}
+
+export interface ReviewStatus {
+  /** revisões vencidas; `null` = ainda desconhecido */
+  dueCount: number | null;
+  loading: boolean;
+  error: boolean;
+  /** `false` em SSR/sem IndexedDB — o badge não deve aparecer */
+  available: boolean;
+  /** força uma nova leitura agora */
+  refresh: () => void;
+}
+
+interface ReviewState {
+  dueCount: number | null;
+  loading: boolean;
+  error: boolean;
+  available: boolean;
+}
+
+const INITIAL_STATE: ReviewState = {
+  dueCount: null,
+  loading: true,
+  error: false,
+  available: false,
+};
+
+export function useReviewStatus(): ReviewStatus {
+  const [state, setState] = useState<ReviewState>(INITIAL_STATE);
+  const [refreshToken, setRefreshToken] = useState(0);
+
+  const refresh = useCallback(() => {
+    setRefreshToken((token) => token + 1);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      if (!isProgressAvailable()) {
+        if (active) {
+          setState({ dueCount: null, loading: false, error: false, available: false });
+        }
+        return;
+      }
+
+      if (active) {
+        setState((previous) => ({ ...previous, loading: true, available: true }));
+      }
+
+      try {
+        const layer = await getProgressLayer();
+        const due = await layer.store.getDueSnapshots(localDayKey());
+        if (!active) return;
+        setState({
+          dueCount: due.length,
+          loading: false,
+          error: false,
+          available: true,
+        });
+      } catch {
+        if (!active) return;
+        setState({ dueCount: null, loading: false, error: true, available: true });
+      }
+    };
+
+    void load();
+
+    const onFocus = () => {
+      void load();
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") void load();
+    };
+
+    window.addEventListener("focus", onFocus);
+    window.addEventListener(REVIEW_STATUS_EVENT, onFocus);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      active = false;
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener(REVIEW_STATUS_EVENT, onFocus);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [refreshToken]);
+
+  return { ...state, refresh };
+}
+[0m
+[0m$ [0mcd /dev-server && timeout 600 bunx tsgo --noEmit 2>&1 | tail -30; echo "EXIT=$?"
+EXIT=0
+[0m
+[0m$ [0mcd /dev-server && cat src/routes/__root.tsx; echo '=== routeTree routes ==='; rg -n "fullPath|createFileRoute" src/routeTree.gen.ts | head -40
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  Outlet,
+  Link,
+  createRootRouteWithContext,
+  useRouter,
+  HeadContent,
+  Scripts,
+  type ErrorComponentProps,
+} from "@tanstack/react-router";
+import { useEffect, type ReactNode } from "react";
+
+import appCss from "../styles.css?url";
+import { reportLovableError } from "../lib/lovable-error-reporting";
+import { AppShell } from "@/components/layout/app-shell";
+import { Toaster } from "@/components/ui/sonner";
+
+function NotFoundComponent() {
+  return (
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
+      <div className="max-w-md text-center">
+        <h1 className="font-serif text-7xl font-bold text-foreground">404</h1>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Página não encontrada</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          O endereço que você abriu não existe neste app.
+        </p>
+        <div className="mt-6">
+          <Link
+            to="/"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Voltar ao início
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
+  console.error(error);
+  const router = useRouter();
+  useEffect(() => {
+    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+  }, [error]);
+
+  return (
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
+      <div className="max-w-md text-center">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          Esta tela não carregou
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Algo deu errado por aqui. Tente novamente ou volte ao início.
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <button
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Tentar novamente
+          </button>
+          <a
+            href="/"
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            Voltar ao início
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  head: () => ({
+    meta: [
+      { charSet: "utf-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { title: "PTE Master Hub — preparo para o PTE Academic" },
+      {
+        name: "description",
+        content:
+          "Treino de todos os tipos de tarefa do PTE Academic com avaliação por IA, agenda de revisão e progresso 100% local. Notas exibidas são estimativas de treino, não a nota oficial.",
+      },
+      { property: "og:title", content: "PTE Master Hub — preparo para o PTE Academic" },
+      {
+        property: "og:description",
+        content:
+          "Treine cada tipo de tarefa do PTE Academic com feedback por IA, revisão espaçada e estimativas de treino rotuladas.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+    links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", cross: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Space+Grotesk:wght@400;500;600;700&display=swap",
+      },
+      {
+        rel: "stylesheet",
+        href: appCss,
+      },
+      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+    ],
+  }),
+  shellComponent: RootShell,
+  component: RootComponent,
+  notFoundComponent: NotFoundComponent,
+  errorComponent: ErrorComponent,
+});
+
+function RootShell({ children }: { children: ReactNode }) {
+  return (
+    <html lang="pt-BR" className="dark">
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        {children}
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+function RootComponent() {
+  const { queryClient } = Route.useRouteContext();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      {/*
+        AppShell entrega cabeçalho, navegação, badge global de revisão e rodapé.
+        Required: nested routes render here. Removing <Outlet /> breaks all child routes.
+      */}
+      <AppShell>
+        <Outlet />
+      </AppShell>
+      <Toaster position="top-center" />
+    </QueryClientProvider>
+  );
+}
+=== routeTree routes ===
+86:  fullPaths:
+129:      fullPath: '/'
+136:      fullPath: '/catalogo'
+143:      fullPath: '/diagnostico'
+150:      fullPath: '/progresso'
+157:      fullPath: '/simulado'
+164:      fullPath: '/sessoes/'
+171:      fullPath: '/sessoes/$id'
+[0m
+[0m$ [0mcd /dev-server && rg -n "export const SECTIONS|SECTION_BY_TYPE|compareLocalDayKeys|isLocalDayKey|diffLocalDays|localDayKeyToDate|export function localDayKey|emptySnapshot" src/domain/*.ts | head -40; echo '=== srs reviewQueue ==='; rg -n "export function reviewQueue" -A 12 src/lib/app/srs.ts; echo '=== exam-spec ==='; rg -n "skillScoreScale|EXAM_META" -A 4 src/data/exam-spec.ts | head -30; echo '=== manifest ==='; rg -n "totals" -A 5 src/data/loader.ts | head -30
+src/domain/snapshot.ts:93:export function emptySnapshot(init: NewSnapshotInit): QuestionSnapshot {
+src/domain/schema.ts:37:import { isLocalDayKey } from "./day";
+src/domain/schema.ts:49:  SECTION_BY_TYPE,
+src/domain/schema.ts:240:  if (!isLocalDayKey(value)) {
+src/domain/schema.ts:583:  const derivedSection = SECTION_BY_TYPE[type];
+src/domain/day.ts:30:export function localDayKey(date: Date = new Date()): LocalDayKey {
+src/domain/day.ts:38:export function localDayKeyOfTimestamp(isoTimestamp: string): LocalDayKey | null {
+src/domain/day.ts:48:export function isLocalDayKey(value: unknown): value is LocalDayKey {
+src/domain/day.ts:68:export function localDayKeyToDate(key: LocalDayKey): Date | null {
+src/domain/day.ts:69:  if (!isLocalDayKey(key)) return null;
+src/domain/day.ts:81:  if (!isLocalDayKey(key)) {
+src/domain/day.ts:96:export function diffLocalDays(a: LocalDayKey, b: LocalDayKey): number {
+src/domain/day.ts:97:  const start = localDayKeyToDate(a);
+src/domain/day.ts:98:  const end = localDayKeyToDate(b);
+src/domain/day.ts:100:    throw new TypeError(`diffLocalDays: chave de dia local inválida (${String(a)}, ${String(b)})`);
+src/domain/day.ts:107:export function compareLocalDayKeys(a: LocalDayKey, b: LocalDayKey): number {
+src/domain/question.ts:18:export const SECTIONS = ["speaking", "writing", "reading", "listening"] as const;
+src/domain/question.ts:61:export const SECTION_BY_TYPE: Record<TaskType, Section> = {
+src/domain/question.ts:86:/** Tipos agrupados por seção, derivado de `SECTION_BY_TYPE`. */
+src/domain/question.ts:88:  speaking: TASK_TYPES.filter((type) => SECTION_BY_TYPE[type] === "speaking"),
+src/domain/question.ts:89:  writing: TASK_TYPES.filter((type) => SECTION_BY_TYPE[type] === "writing"),
+src/domain/question.ts:90:  reading: TASK_TYPES.filter((type) => SECTION_BY_TYPE[type] === "reading"),
+src/domain/question.ts:91:  listening: TASK_TYPES.filter((type) => SECTION_BY_TYPE[type] === "listening"),
+src/domain/question.ts:95:  return SECTION_BY_TYPE[type];
+=== srs reviewQueue ===
+276:export function reviewQueue<T extends Pick<QuestionSnapshot, "questionId" | "nextReviewDay">>(
+277-  snapshots: readonly T[],
+278-  today: LocalDayKey,
+279-): T[] {
+280-  assertLocalDay(today, "today");
+281-  return snapshots
+282-    .filter(
+283-      (snapshot) =>
+284-        snapshot.nextReviewDay !== null && compareLocalDayKeys(snapshot.nextReviewDay, today) <= 0,
+285-    )
+286-    .slice()
+287-    .sort((a, b) => {
+288-      const dayA = a.nextReviewDay ?? "";
+=== exam-spec ===
+114:export const EXAM_META = {
+115-  /** Mudanças de formato valem para provas realizadas a partir desta data. */
+116-  formatEffectiveFrom: "2025-08-07",
+117-  scoredTaskTypeCount: 22,
+118-  /** Faixa oficial de questões pontuadas por prova (Score Guide). */
+--
+122:  skillScoreScale: [10, 90],
+123-  /** Duração declarada pela Pearson: aproximadamente 2 horas. */
+124-  typicalDurationMinutesApprox: 120,
+125-  /** Duração máxima declarada no glossário do Score Guide Institution (2h18). */
+126-  maximumDurationMinutes: 138,
+=== manifest ===
+56:  totals: {
+57-    questions: number;
+58-    types: number;
+59-    images: number;
+60-    sources: number;
+61-    sourceDomains: number;
+--
+196:  const totalsRaw = record["totals"];
+197:  if (typeof totalsRaw !== "object" || totalsRaw === null) invalid("manifest.totals", "ausente");
+198:  const totalsRecord = totalsRaw as Record<string, unknown>;
+199-
+200-  const byTypeRaw = record["byType"];
+201-  if (typeof byTypeRaw !== "object" || byTypeRaw === null || Array.isArray(byTypeRaw)) {
+202-    invalid("manifest.byType", "esperado objeto");
+203-  }
+--
+278:    totals: {
+279:      questions: expectCount(totalsRecord["questions"], "manifest.totals.questions"),
+280:      types: expectCount(totalsRecord["types"], "manifest.totals.types"),
+281:      images: expectCount(totalsRecord["images"], "manifest.totals.images"),
+282:      sources: expectCount(totalsRecord["sources"], "manifest.totals.sources"),
+283:      sourceDomains: expectCount(totalsRecord["sourceDomains"], "manifest.totals.sourceDomains"),
+284:      words: expectCount(totalsRecord["words"], "manifest.totals.words"),
+285-    },
+286-    byType,
+287-    bySection,
+288-    byProvenance,
+289-    bySourceId,
+--
+296:  if (sumByType !== manifest.totals.questions) {
+[0m
+[0m$ [0mcd /dev-server && rg -n "validateSearch|search" src/routes/catalogo.tsx | head -20; echo '=== catalogo lib exports ==='; rg -n "^export" src/lib/app/catalogo.ts | head -30
+=== catalogo lib exports ===
+36:export const SPARSE_COUNT_THRESHOLD = 60;
+45:export const TASK_DISPLAY_NAMES: Readonly<Record<TaskType, string>> = Object.freeze({
+71:export type CatalogStatus = "available" | "sparse";
+74:export interface CatalogEntry {
+90:export interface CatalogSection {
+109:export interface CatalogSummary {
+123:export const SECTION_LABELS: Readonly<
+150:export function practiceHref(type: TaskType): string {
+161:export function isComingSoon(entry: CatalogEntry): boolean {
+175:export function deriveCatalog(manifest: BankManifest): CatalogEntry[] {
+225:export function groupCatalog(entries: readonly CatalogEntry[]): CatalogSection[] {
+250:export function summarizeCatalog(entries: readonly CatalogEntry[]): CatalogSummary {
+261:export function officialTaskNames(): ReadonlyMap<string, { name: string; namePt: string }> {
+[0m
+[0m$ [0mcd /dev-server && cat src/components/layout/app-shell.tsx; echo '=== nav items ==='; cat src/components/layout/nav-items.ts
+/**
+ * Shell da aplicação (Fase 4, onda 0).
+ *
+ * Entrega o "esqueleto" que todas as telas usam:
+ * - cabeçalho fixo com marca, navegação principal (desktop) e badge de revisão;
+ * - barra inferior de navegação no mobile (alvos ≥ 56 px);
+ * - rodapé com as rotas secundárias e o aviso de honestidade de medição.
+ *
+ * O conteúdo da rota entra como `children` (o `__root.tsx` passa o `<Outlet />`),
+ * então nenhuma tela precisa repetir header/footer — e o badge de revisão fica
+ * visível em todas elas por construção, não por disciplina.
+ *
+ * Sem números fixos: o shell não exibe contagens do banco (isso é do catálogo).
+ */
+
+import { Link } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+
+import { MAIN_NAV, MOBILE_NAV, SECONDARY_NAV } from "./nav-items";
+import { NavLink } from "./nav-link";
+import { ReviewBadge } from "./review-badge";
+
+export function AppShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex min-h-dvh flex-col bg-background text-foreground">
+      <a
+        href="#conteudo"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
+      >
+        Pular para o conteúdo
+      </a>
+
+      <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-md">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-4 px-4 sm:px-6">
+          <Link
+            to="/"
+            className="group flex min-h-11 shrink-0 items-center gap-2.5 rounded-lg pr-1"
+            aria-label="PTE Master Hub — início"
+          >
+            <span className="flex size-9 items-center justify-center rounded-lg border border-primary/30 bg-primary/10 font-serif text-[13px] font-semibold tracking-tight text-primary">
+              PTE
+            </span>
+            <span className="flex flex-col leading-tight">
+              <span className="font-serif text-[15px] font-semibold tracking-tight text-foreground">
+                Master Hub
+              </span>
+              <span className="hidden text-[10px] uppercase tracking-[0.16em] text-muted-foreground sm:block">
+                Preparo PTE Academic
+              </span>
+            </span>
+          </Link>
+
+          <nav
+            aria-label="Navegação principal"
+            className="hidden flex-1 items-center justify-center gap-0.5 md:flex"
+          >
+            {MAIN_NAV.map((item) => (
+              <NavLink key={item.path} item={item} variant="desktop" />
+            ))}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-2 md:ml-0">
+            <ReviewBadge />
+          </div>
+        </div>
+      </header>
+
+      <main id="conteudo" className="mx-auto w-full max-w-6xl flex-1 px-4 pb-10 pt-8 sm:px-6">
+        {children}
+      </main>
+
+      <footer className="border-t border-border/60 bg-card/20">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6 pb-28 sm:px-6 md:flex-row md:items-center md:justify-between md:pb-6">
+          <nav aria-label="Navegação secundária" className="flex flex-wrap items-center gap-1">
+            {SECONDARY_NAV.map((item) => (
+              <NavLink key={item.path} item={item} variant="footer" />
+            ))}
+          </nav>
+          <p className="max-w-md text-xs leading-relaxed text-muted-foreground">
+            Seu progresso fica 100% neste dispositivo. As notas exibidas são{" "}
+            <span className="text-foreground/80">estimativas de treino</span> — não são a nota
+            oficial do PTE Academic.
+          </p>
+        </div>
+      </footer>
+
+      <nav
+        aria-label="Navegação principal no celular"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border/70 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+      >
+        <div className="mx-auto flex w-full max-w-6xl items-stretch px-1">
+          {MOBILE_NAV.map((item) => (
+            <NavLink key={item.path} item={item} variant="mobile" />
+          ))}
+        </div>
+      </nav>
+    </div>
+  );
+}
+=== nav items ===
+/**
+ * Itens da navegação principal (dados, não JSX).
+ *
+ * Decisões:
+ * - "Praticar" não é destino próprio: no PTE Master Hub a prática começa pela
+ *   escolha do tipo em `/catalogo` (a rota real é `/praticar/$type`, sem índice).
+ *   Um item de menu para `/praticar` seria um link morto.
+ * - `priority` marca o que cabe na barra inferior mobile (5 alvos ≥ 44 px).
+ *   Os itens secundários (Diagnóstico, Simulado) aparecem no rodapé de
+ *   navegação, presente em todas as telas — nenhuma rota fica inalcançável
+ *   no celular.
+ */
+
+import {
+  BookOpen,
+  CalendarClock,
+  Home,
+  LineChart,
+  Settings,
+  Stethoscope,
+  Timer,
+  type LucideIcon,
+} from "lucide-react";
+
+export interface NavItem {
+  /** caminho desejado (resolvido contra o route tree em tempo de render) */
+  path: string;
+  label: string;
+  /** descrição curta para tooltip/leitor de tela */
+  description: string;
+  icon: LucideIcon;
+  /** aparece na barra inferior mobile */
+  priority: boolean;
+}
+
+export const MAIN_NAV: readonly NavItem[] = [
+  {
+    path: "/",
+    label: "Início",
+    description: "Painel do dia, meta e atalhos",
+    icon: Home,
+    priority: true,
+  },
+  {
+    path: "/catalogo",
+    label: "Catálogo",
+    description: "Os tipos de tarefa, contagens e estado do progresso",
+    icon: BookOpen,
+    priority: true,
+  },
+  {
+    path: "/sessoes",
+    label: "Sessões",
+    description: "Sessões retomáveis e fila de revisão",
+    icon: CalendarClock,
+    priority: true,
+  },
+  {
+    path: "/diagnostico",
+    label: "Diagnóstico",
+    description: "Erros por categoria e treino do ponto fraco",
+    icon: Stethoscope,
+    priority: false,
+  },
+  {
+    path: "/progresso",
+    label: "Progresso",
+    description: "Estimativa por habilidade, tendência e relatório",
+    icon: LineChart,
+    priority: true,
+  },
+  {
+    path: "/simulado",
+    label: "Simulado",
+    description: "Simulado cronometrado por blueprint",
+    icon: Timer,
+    priority: false,
+  },
+  {
+    path: "/ajustes",
+    label: "Ajustes",
+    description: "Meta, data da prova, timers, voz e backup",
+    icon: Settings,
+    priority: true,
+  },
+];
+
+/** Itens que aparecem na barra inferior (mobile). */
+export const MOBILE_NAV: readonly NavItem[] = MAIN_NAV.filter((item) => item.priority);
+
+/** Itens secundários, listados no rodapé de navegação (todas as telas). */
+export const SECONDARY_NAV: readonly NavItem[] = MAIN_NAV.filter((item) => !item.priority);
+[0m
+[0m$ [0mcd /dev-server && sed -n 100,165p src/lib/app/catalogo.ts
+/** itens nesta seção (derivado) */
+  questions: number;
+  /** palavras nesta seção (derivado) */
+  words: number;
+  /** tipos com cobertura limitada nesta seção (derivado) */
+  sparseTypes: number;
+}
+
+/** Resumo do catálogo inteiro, sempre derivado das entradas. */
+export interface CatalogSummary {
+  /** tipos cobertos pela derivação */
+  types: number;
+  /** tipos com pelo menos um item aprovado */
+  typesWithContent: number;
+  /** itens no banco (soma das entradas) */
+  questions: number;
+  /** palavras de referência (soma das entradas) */
+  words: number;
+  /** tipos com cobertura limitada */
+  sparseTypes: number;
+}
+
+/** Rótulos das seções — texto de interface, sem relação com contagens. */
+export const SECTION_LABELS: Readonly<
+  Record<Section, { label: string; labelPt: string; description: string }>
+> = Object.freeze({
+  speaking: {
+    label: "Speaking",
+    labelPt: "Fala",
+    description:
+      "Tarefas faladas: você responde em voz alta, com preparação e tempo de resposta próprios de cada tipo.",
+  },
+  writing: {
+    label: "Writing",
+    labelPt: "Escrita",
+    description: "Tarefas escritas com limite de palavras e de tempo, avaliadas por critérios por tipo.",
+  },
+  reading: {
+    label: "Reading",
+    labelPt: "Leitura",
+    description: "Tarefas de leitura com texto, lacunas e opções — o tempo é o da seção, não por questão.",
+  },
+  listening: {
+    label: "Listening",
+    labelPt: "Escuta",
+    description: "Tarefas de escuta a partir do áudio do item; algumas também pontuam escrita ou leitura.",
+  },
+});
+
+/** Destino canônico da prática de um tipo. */
+export function practiceHref(type: TaskType): string {
+  return `/praticar/${type}`;
+}
+
+/**
+ * `true` quando o tipo ainda não tem nenhum item aprovado no banco.
+ *
+ * O contrato de `status` tem dois valores (`available`/`sparse`); "sem conteúdo" é um
+ * caso extremo de cobertura limitada e precisa ser tratado pela UI com o rótulo
+ * "em breve" e o motivo — nunca com conteúdo duvidoso para preencher a tela.
+ */
+export function isComingSoon(entry: CatalogEntry): boolean {
+  return entry.count === 0;
+}
+
+function invalid(detail: string): never {
+[0m
+[0m$ [0mcd /dev-server && rg -n "SECTION_LABELS" src --glob '!routeTree.gen.ts' | head -20
+src/routes/index.tsx:52:  SECTION_LABELS,
+src/routes/index.tsx:682:        {SECTIONS.map((section) => SECTION_LABELS[section]).join(" · ")} — os quatro domínios do PTE
+src/lib/app/plano-do-dia.ts:44:export const SECTION_LABELS: Record<Section, string> = {
+src/lib/app/plano-do-dia.ts:128:  const label = SECTION_LABELS[section];
+src/lib/app/plano-do-dia.ts:165:  const label = SECTION_LABELS[section];
+src/lib/app/catalogo.ts:123:export const SECTION_LABELS: Readonly<
+src/lib/app/catalogo.ts:234:    const labels = SECTION_LABELS[section];
+[0m
+[0m$ [0mcd /dev-server && cat src/lib/app/index.ts
+/**
+ * Ponto de entrada da camada de progresso local (Fase 3).
+ *
+ * Uso típico (Fase 4+):
+ * ```ts
+ * const progress = await openProgressLayer();
+ * await progress.store.submitAttempt(attempt, { questionType: "wfd" });
+ * const json = await progress.backup.exportJson();
+ * ```
+ *
+ * Tudo aqui é local e determinístico: nenhuma chamada de rede, nenhuma IA.
+ * A única dependência de plataforma é IndexedDB (injetável via `fake-indexeddb`
+ * nos testes).
+ */
+
+import { openProgressDb, type ProgressDatabase, type ProgressDbOpenOptions } from "./db";
+import { BackupIo, type BackupIoOptions } from "./backup-io";
+import { MediaStore, type MediaStoreOptions } from "./media";
+import {
+  ProgressStore,
+  type ProgressStoreOptions,
+  type SkillWeightResolver,
+  type TruncationPolicy,
+} from "./storage";
+
+export * from "./db";
+export * from "./srs";
+export * from "./storage";
+export * from "./backup-io";
+export * from "./media";
+
+export interface ProgressLayer {
+  db: ProgressDatabase;
+  store: ProgressStore;
+  backup: BackupIo;
+  media: MediaStore;
+  close: () => void;
+}
+
+export interface OpenProgressLayerOptions {
+  dbName?: string;
+  /** fábrica injetável (testes) — `null` força indisponibilidade */
+  indexedDB?: IDBFactory | null;
+  now?: () => Date;
+  truncation?: Partial<TruncationPolicy>;
+  skillWeights?: SkillWeightResolver;
+  autoTruncate?: boolean;
+  device?: string;
+  exportAttemptLimit?: number;
+  quotaEstimator?: MediaStoreOptions["quotaEstimator"];
+}
+
+/**
+ * Abre o banco e monta os serviços com a MESMA conexão (transações atômicas
+ * entre snapshot, log, agregados, backup e mídia).
+ */
+export async function openProgressLayer(
+  options: OpenProgressLayerOptions = {},
+): Promise<ProgressLayer> {
+  const dbOptions: ProgressDbOpenOptions = {
+    ...(options.dbName === undefined ? {} : { name: options.dbName }),
+    ...(options.indexedDB === undefined ? {} : { indexedDB: options.indexedDB }),
+  };
+  const db = await openProgressDb(dbOptions);
+  const common = {
+    db,
+    ...(options.now === undefined ? {} : { now: options.now }),
+  };
+  const store = new ProgressStore({
+    ...common,
+    ...(options.truncation === undefined ? {} : { truncation: options.truncation }),
+    ...(options.skillWeights === undefined ? {} : { skillWeights: options.skillWeights }),
+    ...(options.autoTruncate === undefined ? {} : { autoTruncate: options.autoTruncate }),
+  } satisfies ProgressStoreOptions);
+  const backupOptions: BackupIoOptions = {
+    store,
+    ...(options.now === undefined ? {} : { now: options.now }),
+    ...(options.device === undefined ? {} : { device: options.device }),
+    ...(options.exportAttemptLimit === undefined
+      ? {}
+      : { exportAttemptLimit: options.exportAttemptLimit }),
+  };
+  const backup = new BackupIo(backupOptions);
+  const mediaOptions: MediaStoreOptions = {
+    db,
+    ...(options.now === undefined ? {} : { now: options.now }),
+    ...(options.quotaEstimator === undefined ? {} : { quotaEstimator: options.quotaEstimator }),
+  };
+  const media = new MediaStore(mediaOptions);
+
+  return {
+    db,
+    store,
+    backup,
+    media,
+    close: () => {
+      db.close();
+    },
+  };
+}
+[0m
+[0m$ [0mcd /dev-server && sed -n 1,80p src/data/loader.ts; echo '...'; rg -n "export async function loadManifest|export function loadManifest" -A 20 src/data/loader.ts
+/**
+ * Loader do banco de questões — a única porta de entrada do conteúdo no app.
+ *
+ * Contrato (Fase 2 → Fase 4+):
+ * - `loadQuestionsByType(type)`  importa **um chunk por tipo** (lazy, de verdade) e
+ *   devolve as questões já validadas por `parseQuestions` de `@/domain`.
+ * - `loadManifest()`             devolve os agregados derivados por
+ *   `scripts/bank/build-manifest.mjs` (fonte única de contagens/SEO).
+ * - `bankImageUrl(file)`         resolve o caminho público de uma imagem do
+ *   Describe Image (`public/di/<arquivo>` → `/di/<arquivo>`).
+ *
+ * Extras usados pelas fases seguintes (registados no relatório da Fase 2):
+ * - `loadBankIndex()`   índice leve por item (catálogo/proveniência — Fases 4/11), lazy.
+ * - `loadAliases()`     `{ id descartado: id canônico }` (vazio hoje; mantido para o futuro).
+ * - `BANK_QUESTION_CHUNKS` mapa tipo → importador lazy (pré-cache da Fase 12).
+ *
+ * O conteúdo do banco é **dado não confiável** de origem externa: nada aqui confia
+ * na forma do JSON — todo item passa pelo contrato de domínio antes de sair daqui.
+ *
+ * Módulo isomórfico (cliente/servidor): sem `node:*`, sem `fs`, sem rede.
+ */
+
+import {
+  SECTION_BY_TYPE,
+  TASK_TYPES,
+  isTaskType,
+  parseQuestions,
+  type Provenance,
+  type Question,
+  type Section,
+  type TaskType,
+} from "@/domain";
+
+/* ------------------------------------------------------------------ */
+/* Tipos do manifesto derivado                                        */
+/* ------------------------------------------------------------------ */
+
+export interface BankTypeManifest {
+  /** Número de itens do tipo (derivado, nunca digitado). */
+  count: number;
+  section: Section;
+  /** Total de palavras do campo principal do tipo (catálogo). */
+  words: number;
+  byProvenance: Record<Provenance, number>;
+}
+
+export interface BankManifest {
+  format: "pte-master-hub-bank-manifest";
+  version: 1;
+  generatedBy: string;
+  source: {
+    package: string;
+    packageVersion: number | null;
+    generatedAt: string | null;
+  };
+  totals: {
+    questions: number;
+    types: number;
+    images: number;
+    sources: number;
+    sourceDomains: number;
+    words: number;
+  };
+  byType: Record<TaskType, BankTypeManifest>;
+  bySection: Record<Section, number>;
+  byProvenance: Record<Provenance, number>;
+  /** Contagem por `source.id` (chave do `MANIFEST.json` do pacote). */
+  bySourceId: Record<string, number>;
+  /** Contagem por domínio de fonte (independência de operador — Fase 11). */
+  byDomain: Record<string, number>;
+  /** Caminhos públicos das imagens do Describe Image. */
+  images: string[];
+}
+
+/** Entrada do índice por item — payload enxuto, sem texto de questão. */
+export interface BankIndexItem {
+  id: string;
+  /** `canonicalId` efetivo (`aliases.json` vazio ⇒ igual a `id`). */
+  canonicalId: string;
+  type: TaskType;
+...
+390:export function loadManifest(): Promise<BankManifest> {
+391-  manifestPromise ??= import("./generated/manifest.json").then((module) =>
+392-    parseBankManifest(moduleDefault(module, "generated/manifest.json")),
+393-  );
+394-  return manifestPromise;
+395-}
+396-
+397-/**
+398- * Carrega o índice leve por item. Lazy: só o catálogo/proveniência (Fases 4/11)
+399- * precisam dele; a Home e o badge de revisão usam apenas o manifesto.
+400- */
+401-export function loadBankIndex(): Promise<BankIndex> {
+402-  indexPromise ??= Promise.all([loadManifest(), import("./generated/index.json")]).then(
+403-    ([manifest, module]) =>
+404-      parseBankIndex(moduleDefault(module, "generated/index.json"), manifest),
+405-  );
+406-  return indexPromise;
+407-}
+408-
+409-/** `{ id descartado: id canônico }` — vazio no pacote atual; mantido para o futuro. */
+410-export function loadAliases(): Promise<Record<string, string>> {
+[0m
+[0m$ [0mcd /dev-server && sed -n 1,60p src/domain/snapshot.ts; echo '=== day ==='; sed -n 20,115p src/domain/day.ts
+/**
+ * Contrato de snapshot por questão (`QuestionSnapshot`).
+ *
+ * Princípio "progresso que nunca se perde" (PRD §6.2/§10): o snapshot é escrito de
+ * forma independente do log de tentativas, que pode ser truncado. Tudo que uma
+ * métrica precisa (contagens, última/melhor nota, caixa SRS, próxima revisão,
+ * erros por categoria, favorito, nota privada) vive aqui.
+ *
+ * Datas de estudo são `LocalDayKey` (`YYYY-MM-DD` no fuso do aluno) — nunca
+ * timestamps UTC, porque passos de 24 h não podem quebrar com horário de verão.
+ *
+ * Consumidores: Fase 3 (storage/migração), Fase 7 (fila do dia/diagnóstico),
+ * Fase 8 (agregados/estimativa), Fase 10 (notas privadas), Fase 11 (`canonicalId`).
+ * Módulo puro: zero I/O.
+ */
+
+import type { LocalDayKey } from "./day";
+import type { TaskType } from "./question";
+
+/**
+ * Categorias de diagnóstico de erro (project1 §2B). Ids estáveis em inglês;
+ * rótulos pt-BR pertencem à UI.
+ * - `content` — conteúdo ausente/incorreto
+ * - `fluency` — hesitação, pausas, ritmo
+ * - `omission` — omissões (palavras/ideias)
+ * - `trap` — armadilha do tipo (distrator, ordem, penalidade)
+ * - `most_missed_words` — palavras mais erradas
+ */
+export const ERROR_CATEGORIES = [
+  "content",
+  "fluency",
+  "omission",
+  "trap",
+  "most_missed_words",
+] as const;
+export type ErrorCategory = (typeof ERROR_CATEGORIES)[number];
+
+export function isErrorCategory(value: unknown): value is ErrorCategory {
+  return typeof value === "string" && (ERROR_CATEGORIES as readonly string[]).includes(value);
+}
+
+/** Contagem de erros por categoria. Categorias ausentes = zero. */
+export type ErrorCounts = Partial<Record<ErrorCategory, number>>;
+
+export interface QuestionSnapshot {
+  questionId: string;
+  questionType: TaskType;
+  /** identidade estatística — quase-duplicatas compartilham o valor */
+  canonicalId: string;
+
+  /** tentativas submetidas (todas) */
+  attempts: number;
+  /** tentativas que produziram nota (verdict `scored`) */
+  scoredAttempts: number;
+  /** última nota na escala de TENTATIVA (0–100); `null` se nunca pontuou */
+  lastScore: number | null;
+  /** melhor nota na escala de TENTATIVA (0–100); `null` se nunca pontuou */
+  bestScore: number | null;
+  /** instante ISO do último envio */
+  lastSubmittedAt: string | null;
+=== day ===
+  return value < 10 ? `0${value}` : String(value);
+}
+
+/**
+ * Converte um `Date` na chave de dia local (`YYYY-MM-DD`) do fuso do dispositivo.
+ *
+ * Usa os getters locais (`getFullYear`/`getMonth`/`getDate`). NÃO use
+ * `toISOString().slice(0, 10)`: em fusos a oeste de UTC isso devolve o dia anterior
+ * à noite e o dia seguinte em fusos a leste nas primeiras horas.
+ */
+export function localDayKey(date: Date = new Date()): LocalDayKey {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
+    throw new TypeError("localDayKey: data inválida");
+  }
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+/** Variante que aceita um instante ISO e devolve `null` se o instante for inválido. */
+export function localDayKeyOfTimestamp(isoTimestamp: string): LocalDayKey | null {
+  const parsed = Date.parse(isoTimestamp);
+  if (Number.isNaN(parsed)) return null;
+  return localDayKey(new Date(parsed));
+}
+
+/**
+ * Valida uma chave de dia local de verdade: formato `YYYY-MM-DD` E data de
+ * calendário existente (rejeita `2026-02-31`, `2026-13-01` e instantes ISO).
+ */
+export function isLocalDayKey(value: unknown): value is LocalDayKey {
+  if (typeof value !== "string") return false;
+  const match = LOCAL_DAY_KEY_PATTERN.exec(value);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return false;
+  // Ao meio-dia local para não colidir com transições de horário de verão.
+  const probe = new Date(year, month - 1, day, 12, 0, 0, 0);
+  return (
+    probe.getFullYear() === year && probe.getMonth() === month - 1 && probe.getDate() === day
+  );
+}
+
+/**
+ * Converte a chave no `Date` do meio-dia local daquele dia.
+ * Meio-dia (não meia-noite) porque em dias de transição de horário de verão a
+ * meia-noite pode não existir ou ser ambígua.
+ */
+export function localDayKeyToDate(key: LocalDayKey): Date | null {
+  if (!isLocalDayKey(key)) return null;
+  const [year, month, day] = key.split("-").map(Number) as [number, number, number];
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+}
+
+/**
+ * Soma (ou subtrai) dias de calendário a uma chave, preservando o dia local.
+ *
+ * Ancorado no meio-dia local: `2026-03-07 + 1` continua `2026-03-08` mesmo num dia
+ * de 23 h (início do horário de verão) e `+2` chega a `2026-03-09`.
+ */
+export function addLocalDays(key: LocalDayKey, days: number): LocalDayKey {
+  if (!isLocalDayKey(key)) {
+    throw new TypeError(`addLocalDays: chave de dia local inválida: ${String(key)}`);
+  }
+  if (!Number.isInteger(days)) {
+    throw new TypeError(`addLocalDays: dias precisa ser inteiro, recebeu ${String(days)}`);
+  }
+  const [year, month, day] = key.split("-").map(Number) as [number, number, number];
+  const shifted = new Date(year, month - 1, day + days, 12, 0, 0, 0);
+  return localDayKey(shifted);
+}
+
+/**
+ * Diferença em dias de calendário entre duas chaves (`b - a`).
+ * Positivo quando `b` é depois de `a`. Ancorado no meio-dia local.
+ */
+export function diffLocalDays(a: LocalDayKey, b: LocalDayKey): number {
+  const start = localDayKeyToDate(a);
+  const end = localDayKeyToDate(b);
+  if (!start || !end) {
+    throw new TypeError(`diffLocalDays: chave de dia local inválida (${String(a)}, ${String(b)})`);
+  }
+  // Arredonda para absorver a hora a menos/mais de dias de transição de DST.
+  return Math.round((end.getTime() - start.getTime()) / 86_400_000);
+}
+
+/** Comparador lexicográfico seguro para `YYYY-MM-DD` (ordem cronológica). */
+export function compareLocalDayKeys(a: LocalDayKey, b: LocalDayKey): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+[0m
+[0m$ [0mcd /dev-server && "$__LOVABLE_REAL_GIT" status --short 2>/dev/null | head -40; echo '---'; curl -s -o /dev/null -w "%{http_code}\n" --max-time 5 http://localhost:8080/ || echo "preview off"
+M .opencode/work/sub/fase-4/s2-home/log-s2-home2.txt
+ M .opencode/work/sub/fase-4/s4-ajustes/log-s4-ajustes2.txt
+ M .opencode/work/sub/fase-4/s5-pratica/log-s5-pratica2.txt
+---
+200
+[0m
+[0m$ [0mcd /dev-server && rg -n "index.tsx|plano-do-dia|TypeError|ReferenceError" /tmp/observability/build-errors.log 2>/dev/null | tail -10; echo '--- runtime ---'; tail -20 /tmp/observability/runtime-errors.log 2>/dev/null
+--- runtime ---
+[0m
+[0m⚙ [0mlovable-tools_browser--screenshot {"path":"/","width":1280,"height":1400}
+[0m⚙ [0mlovable-tools_browser--screenshot {"path":"/","width":390,"height":1300}
+[0m
+[0m← [0mEdit src/lib/app/plano-do-dia.ts
+Index: /dev-server/src/lib/app/plano-do-dia.ts
+===================================================================
+--- /dev-server/src/lib/app/plano-do-dia.ts
++++ /dev-server/src/lib/app/plano-do-dia.ts
+@@ -39,10 +39,17 @@
+ 
+ /** Teto de itens do plano (PRD §F4.1). */
+ export const DAY_PLAN_MAX_ITEMS = 4;
+ 
+-/** Rótulos das seções do exame (interface em pt-BR; nomes oficiais em inglês). */
+-export const SECTION_LABELS: Record<Section, string> = {
++/**
++ * Nomes das seções usados no texto do plano (nomes oficiais em inglês; a
++ * interface é pt-BR no resto das frases).
++ *
++ * Não reutiliza `SECTION_LABELS` de `catalogo.ts` de propósito: aquele mapa é
++ * do catálogo (com descrições longas) e o plano precisa só do nome curto. Nomes
++ * diferentes evitam ambiguidade entre os dois módulos.
++ */
++export const SECTION_DISPLAY_NAMES: Record<Section, string> = {
+   speaking: "Speaking",
+   writing: "Writing",
+   reading: "Reading",
+   listening: "Listening",
+
+[0m
+The Home renders cleanly. I found a few real polish defects to fix: the "Em breve" chip splits description text on 390px, the plan card stretches empty on desktop, a missing greeting, and a name collision with `catalogo.ts`'s `SECTION_LABELS`. Fixing them now.
+[0m$ [0mcd /dev-server && sed -i 's/const label = SECTION_LABELS\[section\];/const label = SECTION_DISPLAY_NAMES[section];/g' src/lib/app/plano-do-dia.ts && rg -n "SECTION_LABELS|SECTION_DISPLAY_NAMES" src/lib/app/plano-do-dia.ts
+47: * Não reutiliza `SECTION_LABELS` de `catalogo.ts` de propósito: aquele mapa é
+51:export const SECTION_DISPLAY_NAMES: Record<Section, string> = {
+135:  const label = SECTION_DISPLAY_NAMES[section];
+172:  const label = SECTION_DISPLAY_NAMES[section];
+[0m
+[0m← [0mEdit src/routes/index.tsx
+Index: /dev-server/src/routes/index.tsx
+===================================================================
+--- /dev-server/src/routes/index.tsx
++++ /dev-server/src/routes/index.tsx
+@@ -48,9 +48,9 @@
+   type Section,
+ } from "@/domain";
+ import { REVIEW_STATUS_EVENT } from "@/hooks/use-review-status";
+ import {
+-  SECTION_LABELS,
++  SECTION_DISPLAY_NAMES,
+   buildDayPlan,
+   practiceBySectionFromSnapshots,
+   totalPracticeAttempts,
+   type DayPlanItem,
+
+[0m
+[0m← [0mEdit src/routes/index.tsx
+Index: /dev-server/src/routes/index.tsx
+===================================================================
+--- /dev-server/src/routes/index.tsx
++++ /dev-server/src/routes/index.tsx
+@@ -678,9 +678,9 @@
+       </div>
+     </section>
+ 
+     <p className="text-center text-xs leading-relaxed text-muted-foreground">
+-      {SECTIONS.map((section) => SECTION_LABELS[section]).join(" · ")} — os quatro domínios do PTE
++      {SECTIONS.map((section) => SECTION_DISPLAY_NAMES[section]).join(" · ")} — os quatro domínios do PTE
+       Academic. As notas do app são estimativas de treino, nunca a nota oficial.
+     </p>
+   </div>
+ );
+
+[0m
+[0m← [0mEdit src/routes/index.tsx
+Index: /dev-server/src/routes/index.tsx
+===================================================================
+--- /dev-server/src/routes/index.tsx
++++ /dev-server/src/routes/index.tsx
+@@ -197,14 +197,24 @@
+     </InternalLink>
+   );
+ }
+ 
++/** Selo honesto para destino cuja rota ainda não foi entregue nesta onda. */
++function ComingSoonChip() {
++  return (
++    <span className="rounded-full border border-dashed border-border/70 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
++      Em breve
++    </span>
++  );
++}
++
+ function PlanRow({ item }: { item: DayPlanItem }) {
+   const resolved = useResolvedPath(item.href);
+   const meta = KIND_META[item.kind];
+   const Icon = meta.icon;
++  const unavailable = resolved === null;
+ 
+-  const content = (
++  const body = (
+     <>
+       <span
+         className={cn(
+           "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border",
+@@ -219,26 +229,24 @@
+           <span className="text-sm font-medium text-foreground">{item.title}</span>
+           <span className="rounded-full border border-border/60 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+             {meta.label}
+           </span>
++          {unavailable && <ComingSoonChip />}
+         </span>
+         <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
+           {item.description}
+         </span>
+       </span>
+     </>
+   );
+ 
+-  if (resolved === null) {
++  if (unavailable) {
+     return (
+       <div
+         aria-disabled="true"
+         className="flex min-h-16 items-start gap-3 rounded-xl border border-dashed border-border/60 bg-card/20 p-4 opacity-70"
+       >
+-        {content}
+-        <span className="mt-1 shrink-0 self-center text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+-          Em breve
+-        </span>
++        {body}
+       </div>
+     );
+   }
+ 
+@@ -246,9 +254,9 @@
+     <InternalLink
+       to={resolved}
+       className="group flex min-h-16 items-start gap-3 rounded-xl border border-border/60 bg-card/40 p-4 transition-colors hover:border-primary/40 hover:bg-card/70"
+     >
+-      {content}
++      {body}
+       <ChevronRight
+         className="mt-1 size-4 shrink-0 self-center text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary"
+         aria-hidden="true"
+       />
+@@ -258,33 +266,34 @@
+ 
+ function ShortcutCard({ shortcut }: { shortcut: Shortcut }) {
+   const resolved = useResolvedPath(shortcut.href);
+   const Icon = shortcut.icon;
++  const unavailable = resolved === null;
+ 
+   const body = (
+     <>
+       <span className="flex size-9 items-center justify-center rounded-lg border border-border/60 bg-secondary/60 text-primary">
+         <Icon className="size-4" aria-hidden="true" />
+       </span>
+       <span className="min-w-0 flex-1">
+-        <span className="block text-sm font-medium text-foreground">{shortcut.label}</span>
++        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
++          <span className="text-sm font-medium text-foreground">{shortcut.label}</span>
++          {unavailable && <ComingSoonChip />}
++        </span>
+         <span className="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+           {shortcut.description}
+         </span>
+       </span>
+     </>
+   );
+ 
+-  if (resolved === null) {
++  if (unavailable) {
+     return (
+       <div
+         aria-disabled="true"
+         className="flex min-h-24 items-start gap-3 rounded-xl border border-dashed border-border/60 bg-card/20 p-4 opacity-70"
+       >
+         {body}
+-        <span className="self-center text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+-          Em breve
+-        </span>
+       </div>
+     );
+   }
+ 
+
+[0m
+[0m← [0mEdit src/routes/index.tsx
+Index: /dev-server/src/routes/index.tsx
+===================================================================
+--- /dev-server/src/routes/index.tsx
++++ /dev-server/src/routes/index.tsx
+@@ -325,8 +325,17 @@
+ const [state, setState] = useState<LocalState>({ status: "loading" });
+ const [reloadToken, setReloadToken] = useState(0);
+ const retry = useCallback(() => setReloadToken((token) => token + 1), []);
+ 
++// Saudação por hora local. Nasce neutra ("Olá") para o SSR e a hidratação
++// produzirem o MESMO HTML; só depois de montar é que a hora do dispositivo
++// entra — nunca um `new Date()` no render.
++const [greeting, setGreeting] = useState("Olá");
++useEffect(() => {
++  const hour = new Date().getHours();
++  setGreeting(hour < 12 ? "Bom dia" : hour < 18 ? "Boa tarde" : "Boa noite");
++}, []);
++
+ const manifest = useQuery({
+   queryKey: ["bank", "manifest"],
+   queryFn: () => loadManifest(),
+   staleTime: Number.POSITIVE_INFINITY,
+
+[0m
+[0m← [0mEdit src/routes/index.tsx
+Index: /dev-server/src/routes/index.tsx
+===================================================================
+--- /dev-server/src/routes/index.tsx
++++ /dev-server/src/routes/index.tsx
+@@ -416,9 +416,9 @@
+ return (
+   <div className="flex flex-col gap-8">
+     <header className="flex flex-col gap-3">
+       <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-primary">
+-        PTE Academic · preparo diário
++        {greeting} · PTE Academic · preparo diário
+       </p>
+       <h1 className="font-serif text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+         Seu plano de hoje
+       </h1>
+
+[0m
+[0m← [0mEdit src/routes/index.tsx
+Index: /dev-server/src/routes/index.tsx
+===================================================================
+--- /dev-server/src/routes/index.tsx
++++ /dev-server/src/routes/index.tsx
+@@ -427,9 +427,9 @@
+     ritmo. O plano usa apenas o seu progresso local — nada aqui é nota oficial.
+   </p>
+ </header>
+ 
+-<div className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
++<div className="grid gap-6 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-start">
+   {/* Plano do dia */}
+   <section
+     aria-labelledby="plano-do-dia"
+     className="flex flex-col gap-4 rounded-2xl border border-border/60 bg-card/30 p-5 sm:p-6"
+
+[0m
+[0m$ [0mcd /dev-server && timeout 600 bunx tsgo --noEmit; echo "TSGO_EXIT=$?"
+TSGO_EXIT=0
+[0m
+[0m$ [0mcd /dev-server && timeout 600 bunx vitest run src/test/app/plano-do-dia.test.ts 2>&1 | tail -12
+RUN  v5.0.3 /dev-server
+
+
+ Test Files  1 passed (1)
+      Tests  22 passed (22)
+   Start at  20:44:02
+   Duration  1.46s (environment 84%, transform 8%, setup 5%, import 1%, tests 1%)
+[0m
+[0m⚙ [0mlovable-tools_browser--screenshot {"height":1300,"path":"/","width":390}
+[0m
+[0m$ [0mcd /dev-server && curl -s --max-time 10 http://localhost:8080/ | rg -o "Olá[^<]{0,40}|PTE Academic · preparo diário|Em breve" | head -5; echo '--- src check ---'; rg -n "greeting|ComingSoonChip" src/routes/index.tsx | head
+binary file matches (found "\0" byte around offset 30118)
+--- src check ---
+202:function ComingSoonChip() {
+233:          {unavailable && <ComingSoonChip />}
+280:          {unavailable && <ComingSoonChip />}
+332:  const [greeting, setGreeting] = useState("Olá");
+420:          {greeting} · PTE Academic · preparo diário
+[0m
+[0m$ [0mcd /dev-server && curl -s --compressed --max-time 10 http://localhost:8080/ | rg -o "Olá[^<]{0,45}" | head -3; echo '---'; curl -s --compressed --max-time 10 http://localhost:8080/src/routes/index.tsx | rg -c "ComingSoonChip" 
+---
+[0m
