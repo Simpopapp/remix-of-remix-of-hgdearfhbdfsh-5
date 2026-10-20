@@ -55,4 +55,27 @@
 - Sem novas dependências.
 
 ## Registro de decisões (preencha numerado)
-1. —
+1. **TTS com três controles explícitos** — `tts.enabled`, voz e velocidade são gravados juntos no
+   mesmo patch (`TtsDraft` inclui `enabled`), porque um `buildSettingsPatch` parcial que omitisse
+   `enabled` faria o interruptor não surtir efeito. O patch continua sendo só da seção `tts`.
+2. **Slider de velocidade com rascunho local** — `rate` só é persistido em `pointerup`/`keyup`/`blur`;
+   durante o arrasto o estado é local. Evita dezenas de gravações no IndexedDB por movimento e
+   mantém feedback imediato do valor.
+3. **Importar = prévia obrigatória em duas etapas** — o `<input type="file">` lê com `file.text()` e
+   chama `backup.inspect`; nada é escrito. Só depois o aluno escolhe mesclar ou substituir, e
+   "substituir" exige um segundo toque de confirmação, porque é destrutivo.
+4. **Arquivo inválido vai para a quarentena via `import(..., { saveUndo:false })`** — é o único
+   caminho do `BackupIo` que grava o cru sem tocar no estado; a máquina de estados testa que
+   `importState` não é chamado e que os snapshots permanecem idênticos.
+5. **`onDataChange` no `BackupSection`** — importação/desfazer podem trocar ajustes e quota; a página
+   relê `readAppSettings` e a estimativa em vez de pedir reload. Nenhum contrato novo é exposto.
+6. **Quarentena é somente leitura por desenho** — a tela lista resumos, permite exportar o payload
+   cru e nunca oferece "apagar" nem "corrigir"; o aviso de versão futura pede atualização do app.
+7. **Estados de erro separados** — `unavailable` (sem IndexedDB: aba privada/restrita) e `error`
+   (abriu mas falhou) têm textos distintos e ambos afirmam que nada foi apagado.
+8. **Zero rede na página** — exportar usa `Blob` + `URL.createObjectURL` com guarda de SSR; nenhuma
+   chamada de IA ou de servidor nasce em Ajustes (o processamento externo só é explicado aqui).
+9. **Textos de fala sempre em inglês** — o exemplo de TTS é uma frase em inglês e informa a voz real
+   usada (`SpeakHandle.voiceName`); sem voz, a tela diz que nada foi falado.
+10. **Não fechar a camada de progresso no unmount** — `getProgressLayer()` é singleton; a página só
+    marca `mountedRef` para não atualizar estado após desmontar.
